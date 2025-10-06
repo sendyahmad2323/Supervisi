@@ -1,60 +1,109 @@
 {% extends 'base.html' %}
-
-{% block title %}Kelola Perawat{% endblock %}
+{% block title %}
+  Kelola Perawat
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-user-nurse me-2"></i>Kelola Perawat
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0"><i class="bi bi-person-badge me-2"></i>Kelola Perawat</h3>
-            <a href="{% url 'tambah_perawat' %}" class="btn btn-light btn-sm shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i>Tambah Perawat
-            </a>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead style="background-color: #D0E8F2; color: #2C5F7C;">
-                        <tr>
-                            <th class="px-4 py-3">ID</th>
-                            <th class="py-3">Username</th>
-                            <th class="py-3">Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in perawat %}
-                        <tr class="border-bottom">
-                            <td class="px-4">{{ p.id }}</td>
-                            <td>{{ p.username }}</td>
-                            <td>{{ p.email }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-5 text-muted">
-                                <i class="bi bi-person-x" style="font-size: 2rem;"></i>
-                                <p class="mt-2 mb-0">Belum ada perawat</p>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <style>
+    .card-soft {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(13, 110, 253, 0.06);
+    }
+    .hero {
+      background: linear-gradient(145deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.08));
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.08);
+      padding: 18px;
+    }
+    .table thead th {
+      background: linear-gradient(145deg, #0d6efd, #2563eb);
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+      border: 0;
+    }
+    .table tbody td {
+      vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+      background: rgba(13, 110, 253, 0.05);
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    .empty-icon {
+      font-size: 2rem;
+      color: rgba(13, 110, 253, 0.4);
+    }
+  </style>
+
+  <!-- Header -->
+  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h5 class="fw-bold mb-1"><i class="fa-solid fa-user-nurse me-2 text-primary"></i>Kelola Perawat</h5>
+      <div class="text-muted small">Daftar akun perawat yang terdaftar dalam sistem supervisi</div>
     </div>
-</div>
+    <a href="{% url 'tambah_perawat' %}" class="btn btn-primary btn-soft"><i class="fa-solid fa-user-plus me-1"></i>Tambah Perawat</a>
+  </div>
 
-<style>
-    .table tbody tr:hover {
-        background-color: #F0F8FF;
-    }
+  <!-- Table -->
+  <div class="card-soft">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 text-center">
+        <thead>
+          <tr>
+            <th style="width:80px;">No</th>
+            <th>
+              <i class="fa-solid fa-user me-1"></i>Username
+            </th>
+            <th>
+              <i class="fa-solid fa-envelope me-1"></i>Email
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in perawat %}
+            <tr>
+              <!-- Nomor urut -->
+              <td>
+                <span class="fw-bold text-primary">{{ forloop.counter }}</span>
+              </td>
 
-    .card {
-        border-radius: 12px;
-    }
+              <!-- Username -->
+              <td class="text-start">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px; height:36px; background:rgba(13,110,253,.12); color:#0d6efd;">
+                    <i class="fa-solid fa-user"></i>
+                  </div>
+                  <span class="fw-semibold">{{ p.username }}</span>
+                </div>
+              </td>
 
-    .card-header {
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-    }
-</style>
+              <!-- Email -->
+              <td class="text-start">{{ p.email }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3" class="py-5 text-muted">
+                <i class="fa-regular fa-user-xmark empty-icon d-block mb-2"></i>
+                Belum ada perawat
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 {% endblock %}

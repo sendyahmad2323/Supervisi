@@ -15,6 +15,8 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from django.http import HttpResponse
+from django.db.models import Avg, Q, Count
+from django.contrib.auth.decorators import login_required
 import os
 
 # ================== HELPERS (ROLE) ==================
@@ -134,27 +136,6 @@ def detail_supervisi(request, supervisi_id):
             return redirect('detail_supervisi', supervisi_id=supervisi.id)
 
     return render(request, 'admin/detail_supervisi.html', {'supervisi': supervisi})
-
-@login_required
-@user_passes_test(admin_required)
-def edit_supervisi(request, pk):
-    supervisi_obj = get_object_or_404(Supervisi, pk=pk)
-
-    if request.method == "POST":
-        form = SupervisiForm(request.POST, request.FILES, instance=supervisi_obj)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Data supervisi berhasil diperbarui.")
-            return redirect('daftar_supervisi')
-        else:
-            print(form.errors)
-    else:
-        form = SupervisiForm(instance=supervisi_obj)
-
-    return render(request, 'admin/edit_supervisi.html', {
-        'form': form,
-        'supervisi_obj': supervisi_obj  # untuk preview TTD lama
-    })
 
 @login_required
 @user_passes_test(admin_required)
@@ -283,6 +264,37 @@ def isi_supervisi(request, format_id):
         'format': format_supervisi,
         'items': items
     })
+
+@login_required
+def ringkasan_saya(request):
+    qs = Supervisi.objects.filter(perawat=request.user).select_related('format_supervisi')
+
+    def done(s):
+      return bool(s.ttd_perawat and s.ttd_kepala)
+
+    cards = [{
+        "id": s.id,
+        "judul": s.format_supervisi.nama,
+        "skor": round(s.skor_total or 0, 1),
+        "progress": max(0, min(100, s.skor_total or 0)),
+        "status_done": done(s),                            # True = selesai, False = menunggu TTD
+        "status_label": "Selesai" if done(s) else "Menunggu TTD",
+    } for s in qs]
+
+    total = qs.count()
+    selesai = sum(1 for s in qs if done(s))
+    avg_skor = qs.aggregate(r=Avg('skor_total'))['r'] or 0
+
+    context = {
+        "cards": cards,
+        "summary": {
+            "total": total,
+            "avg": round(avg_skor, 1),
+            "selesai": selesai,
+            "menunggu": total - selesai,
+        }
+    }
+    return render(request, "supervisi/ringkasan_saya.html", context)
 
 # ================== HITUNG SKOR ==================
 def hitung_skor_total(supervisi_id):

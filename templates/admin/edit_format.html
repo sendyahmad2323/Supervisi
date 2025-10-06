@@ -1,10 +1,84 @@
 {% extends 'base.html' %}
+{% block title %}
+  Edit Format
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-pen-to-square me-2"></i>Edit Format Supervisi
+{% endblock %}
+
 {% block content %}
-<h2>Edit Format</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Simpan</button>
-    <a href="{% url 'kelola_format' %}" class="btn btn-secondary">Batal</a>
-</form>
+  <style>
+    .card-soft {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(13, 110, 253, 0.06);
+    }
+    .hero {
+      background: linear-gradient(145deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.08));
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.08);
+      padding: 18px;
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    form label {
+      font-weight: 600;
+      color: #1e3a8a;
+    }
+    input,
+    textarea,
+    select {
+      border-radius: 10px !important;
+    }
+  </style>
+
+  <!-- Header -->
+  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h5 class="fw-bold mb-1"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Edit Format Supervisi</h5>
+      <div class="text-muted small">Perbarui nama dan deskripsi format supervisi</div>
+    </div>
+    <div>
+      <a href="{% url 'kelola_format' %}" class="btn btn-secondary btn-soft"><i class="fa-solid fa-arrow-left me-1"></i>Kembali</a>
+    </div>
+  </div>
+
+  <!-- Form Edit -->
+  <div class="card-soft p-4">
+    <form method="post" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_nama" class="form-label">Nama Format</label>
+        {{ form.nama }}
+      </div>
+      <div class="mb-3">
+        <label for="id_deskripsi" class="form-label">Deskripsi</label>
+        {{ form.deskripsi }}
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'kelola_format' %}" class="btn btn-secondary btn-soft"><i class="fa-solid fa-xmark me-1"></i>Batal</a>
+        <button type="submit" class="btn btn-success btn-soft"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Tambahkan placeholder otomatis untuk form
+    document.addEventListener('DOMContentLoaded', function () {
+      const inputs = document.querySelectorAll('input, textarea, select')
+      inputs.forEach((i) => {
+        if (!i.placeholder && i.labels.length > 0) i.placeholder = 'Masukkan ' + i.labels[0].innerText.toLowerCase()
+      })
+    })
+  </script>
 {% endblock %}

@@ -1,47 +1,129 @@
 {% extends 'base.html' %}
 {% load supervisi_tags %}
-{% block title %}Kelola Format{% endblock %}
+{% block title %}
+  Kelola Format
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-clipboard-list me-2"></i>Kelola Format Supervisi
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Kelola Format Supervisi</h2>
-        <a href="{% url 'tambah_format_supervisi' %}" class="btn btn-primary">Tambah Format</a>
-    </div>
+  <style>
+    .card-soft {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(13, 110, 253, 0.06);
+    }
+    .hero {
+      background: linear-gradient(145deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.08));
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.08);
+      padding: 18px;
+    }
+    .table thead th {
+      background: linear-gradient(145deg, #0d6efd, #2563eb);
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+      border: 0;
+    }
+    .table tbody td {
+      vertical-align: middle;
+    }
+    .table-hover tbody tr:hover {
+      background: rgba(13, 110, 253, 0.05);
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    .empty-icon {
+      font-size: 2rem;
+      color: rgba(13, 110, 253, 0.4);
+    }
+  </style>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Nama Format</th>
-                    <th scope="col">Jumlah Item</th>
-                    <th scope="col">Jumlah Aspek</th>
-                    <th scope="col">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for f in formats %}
-                <tr>
-                    <td>{{ f.id }}</td>
-                    <td>{{ f.nama }}</td>
-                    <td>{{ f.items.count }}</td>
-                    <td>{{ f.items.all|sum_aspek }}</td>
-                    <td>
-                        <a href="{% url 'edit_format' f.pk %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'hapus_format' f.pk %}" class="btn btn-sm btn-danger" 
-                           onclick="return confirm('Yakin ingin menghapus format ini?');">Hapus</a>
-                        <a href="{% url 'tambah_item_format' f.id %}" class="btn btn-sm btn-success">Tambah Item</a>
-                        <a href="{% url 'detail_format' f.pk %}" class="btn btn-sm btn-info">Detail</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center">Belum ada format</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <!-- Header -->
+  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h5 class="fw-bold mb-1"><i class="fa-solid fa-clipboard-list me-2 text-primary"></i>Kelola Format Supervisi</h5>
+      <div class="text-muted small">Manajemen format dan aspek supervisi keperawatan</div>
     </div>
-</div>
+    <a href="{% url 'tambah_format_supervisi' %}" class="btn btn-primary btn-soft"><i class="fa-solid fa-plus me-1"></i>Tambah Format</a>
+  </div>
+
+  <!-- Tabel Format -->
+  <div class="card-soft">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 text-center">
+        <thead>
+          <tr>
+            <th style="width:70px;">No</th>
+            <th>
+              <i class="fa-solid fa-file-lines me-1"></i>Nama Format
+            </th>
+            <th>
+              <i class="fa-solid fa-list-ol me-1"></i>Jumlah Item
+            </th>
+            <th>
+              <i class="fa-solid fa-layer-group me-1"></i>Jumlah Aspek
+            </th>
+            <th style="width:260px;">
+              <i class="fa-solid fa-gear me-1"></i>Aksi
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formats %}
+            <tr>
+              <!-- Nomor urut -->
+              <td>
+                <span class="fw-bold text-primary">{{ forloop.counter }}</span>
+              </td>
+
+              <!-- Nama format -->
+              <td class="text-start">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px; height:36px; background:rgba(13,110,253,.12); color:#0d6efd;">
+                    <i class="fa-solid fa-file"></i>
+                  </div>
+                  <span class="fw-semibold">{{ f.nama }}</span>
+                </div>
+              </td>
+
+              <!-- Jumlah item -->
+              <td>{{ f.items.count }}</td>
+
+              <!-- Jumlah aspek -->
+              <td>{{ f.items.all|sum_aspek }}</td>
+
+              <!-- Tombol aksi -->
+              <td>
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                  <a href="{% url 'edit_format' f.pk %}" class="btn btn-warning btn-sm text-white btn-soft"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</a>
+                  <a href="{% url 'hapus_format' f.pk %}" class="btn btn-danger btn-sm btn-soft" onclick="return confirm('Yakin ingin menghapus format ini?');"><i class="fa-solid fa-trash me-1"></i>Hapus</a>
+                  <a href="{% url 'tambah_item_format' f.id %}" class="btn btn-success btn-sm btn-soft"><i class="fa-solid fa-plus me-1"></i>Item</a>
+                  <a href="{% url 'detail_format' f.pk %}" class="btn btn-info btn-sm text-white btn-soft"><i class="fa-solid fa-circle-info me-1"></i>Detail</a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="py-5 text-muted">
+                <i class="fa-regular fa-rectangle-list empty-icon d-block mb-2"></i>
+                Belum ada format supervisi
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 {% endblock %}

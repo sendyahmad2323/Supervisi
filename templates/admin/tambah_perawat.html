@@ -1,29 +1,133 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
-{% block title %}Tambah Perawat{% endblock %}
+{% block title %}
+  Tambah Perawat
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-user-nurse me-2"></i>Tambah Perawat
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3>Tambah Perawat</h3>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <div class="d-grid mt-3">
-                            <button type="submit" class="btn btn-success btn-lg">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-center text-muted">
-                    Silakan isi data perawat dengan lengkap
-                </div>
-            </div>
-        </div>
+  <style>
+    .card-soft {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(13, 110, 253, 0.06);
+    }
+    .hero {
+      background: linear-gradient(145deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.08));
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.08);
+      padding: 18px;
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    .form-label {
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .form-control {
+      border-radius: 12px;
+    }
+    .help {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+  </style>
+
+  <!-- Header -->
+  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h5 class="fw-bold mb-1"><i class="fa-solid fa-user-nurse me-2 text-primary"></i>Tambah Perawat</h5>
+      <div class="text-muted small">Isi data perawat dengan lengkap untuk menambahkan akun.</div>
     </div>
-</div>
+    <a href="{% url 'kelola_perawat' %}" class="btn btn-secondary btn-soft"><i class="fa-solid fa-arrow-left me-1"></i>Kembali</a>
+  </div>
+
+  <!-- Form -->
+  <div class="card-soft p-4" style="max-width:720px;">
+    <form method="post" class="needs-validation" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for e in form.non_field_errors %}
+            {{ e }}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Username -->
+      <div class="mb-3">
+        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+        {% if form.username.errors %}
+          {{ form.username|add_class:'form-control is-invalid' }}
+          <div class="invalid-feedback">
+            {% for error in form.username.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ form.username|add_class:'form-control' }}
+        {% endif %}
+      </div>
+
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+        {% if form.email.errors %}
+          {{ form.email|add_class:'form-control is-invalid' }}
+          <div class="invalid-feedback">
+            {% for error in form.email.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ form.email|add_class:'form-control' }}
+        {% endif %}
+      </div>
+
+      <!-- Password -->
+      <div class="mb-3">
+        <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+        {% if form.password.errors %}
+          {{ form.password|add_class:'form-control is-invalid' }}
+          <div class="invalid-feedback">
+            {% for error in form.password.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% else %}
+          {{ form.password|add_class:'form-control' }}
+        {% endif %}
+        <div class="help mt-1">Minimal 8 karakter, kombinasikan huruf & angka untuk keamanan.</div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <a href="{% url 'kelola_perawat' %}" class="btn btn-secondary btn-soft"><i class="fa-solid fa-xmark me-1"></i>Batal</a>
+        <button type="submit" class="btn btn-success btn-soft"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Tambah placeholder otomatis sesuai label (kosmetik)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll("input[type='text'], input[type='email'], input[type='password']").forEach(function (el) {
+        if (!el.placeholder && el.labels && el.labels[0]) {
+          el.placeholder = 'Masukkan ' + el.labels[0].innerText.toLowerCase()
+        }
+      })
+    })
+  </script>
 {% endblock %}

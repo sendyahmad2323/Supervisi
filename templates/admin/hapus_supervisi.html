@@ -1,13 +1,84 @@
 {% extends 'base.html' %}
 
-{% block title %}Hapus Supervisi{% endblock %}
+{% block title %}
+  Hapus Supervisi
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-trash-can me-2"></i>Hapus Supervisi
+{% endblock %}
 
 {% block content %}
-<h2>Hapus Supervisi</h2>
-<p>Apakah Anda yakin ingin menghapus supervisi dari <strong>{{ supervisi.perawat.username }}</strong> dengan format <strong>{{ supervisi.format_supervisi.nama }}</strong>?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Hapus</button>
-    <a href="{% url 'daftar_supervisi' %}" class="btn btn-secondary">Batal</a>
-</form>
+  <style>
+    .confirm-card {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.1);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 30px rgba(13, 110, 253, 0.08);
+      padding: 2rem;
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .confirm-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(220, 53, 69, 0.12);
+      color: #dc3545;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1rem;
+    }
+    .confirm-title {
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #1e3a8a;
+    }
+    .confirm-text {
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    .btn-danger-soft {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+    }
+    .btn-danger-soft:hover {
+      background: #c82333;
+      color: #fff;
+    }
+  </style>
+
+  <div class="confirm-card mt-4">
+    <div class="confirm-icon">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+
+    <h5 class="confirm-title">Konfirmasi Hapus Supervisi</h5>
+    <p class="confirm-text">
+      Apakah Anda yakin ingin menghapus supervisi milik
+      <strong class="text-primary">{{ supervisi.perawat.username }}</strong>
+      dengan format
+      <strong class="text-danger">{{ supervisi.format_supervisi.nama }}</strong>?
+      <br />
+      Tindakan ini <b>tidak dapat dibatalkan</b> dan data akan dihapus permanen.
+    </p>
+
+    <form method="post" class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger-soft btn-soft px-4"><i class="fa-solid fa-trash-can me-1"></i> Hapus</button>
+      <a href="{% url 'daftar_supervisi' %}" class="btn btn-secondary btn-soft px-4"><i class="fa-solid fa-xmark me-1"></i> Batal</a>
+    </form>
+  </div>
 {% endblock %}

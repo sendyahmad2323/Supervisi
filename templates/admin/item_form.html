@@ -1,119 +1,189 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Form Format Supervisi{% endblock %}
+{% block title %}Form Item Format Supervisi{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-list-check me-2"></i>Form Item Format Supervisi
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">Form Format Supervisi</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        <table class="table table-bordered" id="supervisiTable">
-            <thead class="table-light text-center">
-                <tr>
-                    <th>Prosedur</th>
-                    <th>Aspek yang Dinilai</th>
-                    <th>D</th>
-                    <th>TD</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="prosedurContainer">
-                <!-- Prosedur awal -->
-                <tr class="prosedur-row">
-                    <td>
-                        <input type="text" name="prosedur_0" class="form-control" placeholder="Masukkan prosedur">
-                    </td>
-                    <td>
-                        <div class="aspekContainer">
-                            <div class="mb-2 d-flex">
-                                <input type="text" name="aspek_0_0" class="form-control me-2" placeholder="Masukkan aspek">
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm mt-2 add-aspek">Tambah Aspek</button>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column aspekDContainer">
-                            <div class="mb-2 text-center">
-                                <input type="checkbox" name="d_0_0" class="form-check-input">
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column aspekTDContainer">
-                            <div class="mb-2 text-center">
-                                <input type="checkbox" name="td_0_0" class="form-check-input">
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-prosedur">Hapus Prosedur</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<style>
+  .card-soft {
+    background: #fff;
+    border: 1px solid rgba(13, 110, 253, 0.1);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(13, 110, 253, 0.08);
+  }
+  .btn-soft {
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+    transition: all 0.2s ease;
+  }
+  .btn-soft:hover { transform: translateY(-2px); }
+  .form-control { border-radius: 10px; }
 
-        <button type="button" class="btn btn-success mb-3" id="addProsedur">Tambah Prosedur</button>
+  table.table-super {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table.table-super thead th {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: #fff;
+    text-align: center;
+    padding: 0.75rem;
+    font-weight: 700;
+    border: none;
+  }
+  table.table-super td {
+    background: #fff;
+    vertical-align: top;
+    padding: 0.75rem;
+    border-top: 1px solid #eef2ff;
+  }
+  table.table-super tbody tr:nth-child(even) td {
+    background: #f9fbff;
+  }
 
-        <!-- Tempat TTD -->
-        <div class="row mt-5">
-            <div class="col-md-6 text-center">
-                <p>Perawat yang disupervisi</p>
-                <br><br>
-                <p>________________________</p>
-            </div>
-            <div class="col-md-6 text-center">
-                <p>Supervisor</p>
-                <br><br>
-                <p>Ns. Rike Sebrianti, S.Kep., M.Kep</p>
-                <p>NIP : 19821122200801</p>
-            </div>
-        </div>
+  /* === Checkbox Bright & Modern === */
+  .form-check-input {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #4a90e2;
+    box-shadow: 0 0 6px rgba(74,144,226,0.4);
+    border: 2px solid #4a90e2;
+    transition: all 0.2s ease;
+  }
+  .form-check-input:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 10px rgba(74,144,226,0.6);
+  }
+  .form-check-input:checked {
+    box-shadow: 0 0 10px rgba(74,144,226,0.8);
+    background-color: #4a90e2 !important;
+  }
+  .form-check-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+</style>
 
-        <button type="submit" class="btn btn-success mt-4 w-100">Simpan</button>
-    </form>
+<!-- Header -->
+<div class="card-soft p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <h5 class="fw-bold mb-1">
+      <i class="fa-solid fa-list-check me-2 text-primary"></i>Form Item Format Supervisi
+    </h5>
+    <div class="text-muted small">Tambahkan prosedur dan aspek penilaian untuk format supervisi.</div>
+  </div>
+  <a href="{% url 'kelola_format' %}" class="btn btn-secondary btn-soft">
+    <i class="fa-solid fa-arrow-left me-1"></i>Kembali
+  </a>
 </div>
 
-<script>
-let prosedurCount = 1;  // jumlah prosedur
-let aspekCounts = [1];   // jumlah aspek per prosedur (index = prosedur)
+<!-- Form -->
+<form method="post" class="card-soft p-3">
+  {% csrf_token %}
+  <div class="table-responsive">
+    <table class="table-super table align-middle" id="supervisiTable">
+      <thead>
+        <tr>
+          <th>Prosedur</th>
+          <th>Aspek yang Dinilai</th>
+          <th>D</th>
+          <th>TD</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="prosedurContainer">
+        <tr class="prosedur-row">
+          <td>
+            <input type="text" name="prosedur_0" class="form-control" placeholder="Masukkan prosedur">
+          </td>
+          <td>
+            <div class="aspekContainer">
+              <div class="mb-2 d-flex">
+                <input type="text" name="aspek_0_0" class="form-control me-2" placeholder="Masukkan aspek">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm btn-soft mt-2 add-aspek">
+              <i class="fa-solid fa-plus me-1"></i>Tambah Aspek
+            </button>
+          </td>
+          <td>
+            <div class="d-flex flex-column aspekDContainer">
+              <div class="mb-2 text-center">
+                <input type="checkbox" name="d_0_0" class="form-check-input d-check">
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex flex-column aspekTDContainer">
+              <div class="mb-2 text-center">
+                <input type="checkbox" name="td_0_0" class="form-check-input td-check">
+              </div>
+            </div>
+          </td>
+          <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm btn-soft remove-prosedur">
+              <i class="fa-solid fa-trash-can me-1"></i>Hapus
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-function createAspekInput(prosedurIndex, aspekIndex) {
-    // div input aspek
+  <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+    <button type="button" class="btn btn-success btn-soft" id="addProsedur">
+      <i class="fa-solid fa-plus me-1"></i>Tambah Prosedur
+    </button>
+
+    <button type="submit" class="btn btn-primary btn-soft">
+      <i class="fa-solid fa-floppy-disk me-1"></i>Simpan Format
+    </button>
+  </div>
+</form>
+
+<script>
+    let prosedurCount = 1;
+    let aspekCounts = [1];
+
+    function createAspekInput(prosedurIndex, aspekIndex) {
     const divAspek = document.createElement('div');
     divAspek.classList.add('mb-2', 'd-flex');
     divAspek.innerHTML = `<input type="text" name="aspek_${prosedurIndex}_${aspekIndex}" class="form-control me-2" placeholder="Masukkan aspek">`;
 
-    // div checkbox D
     const divD = document.createElement('div');
     divD.classList.add('mb-2', 'text-center');
-    divD.innerHTML = `<input type="checkbox" name="d_${prosedurIndex}_${aspekIndex}" class="form-check-input">`;
+    divD.innerHTML = `<input type="checkbox" name="d_${prosedurIndex}_${aspekIndex}" class="form-check-input d-check">`;
 
-    // div checkbox TD
     const divTD = document.createElement('div');
     divTD.classList.add('mb-2', 'text-center');
-    divTD.innerHTML = `<input type="checkbox" name="td_${prosedurIndex}_${aspekIndex}" class="form-check-input">`;
+    divTD.innerHTML = `<input type="checkbox" name="td_${prosedurIndex}_${aspekIndex}" class="form-check-input td-check">`;
 
     return { divAspek, divD, divTD };
-}
+    }
 
-// Tambah prosedur baru
-document.getElementById('addProsedur').addEventListener('click', function() {
+    // Tambah prosedur
+    document.getElementById('addProsedur').addEventListener('click', function() {
     const container = document.getElementById('prosedurContainer');
     const row = document.createElement('tr');
     row.classList.add('prosedur-row');
-
     row.innerHTML = `
         <td><input type="text" name="prosedur_${prosedurCount}" class="form-control" placeholder="Masukkan prosedur"></td>
-        <td><div class="aspekContainer"></div><button type="button" class="btn btn-primary btn-sm mt-2 add-aspek">Tambah Aspek</button></td>
+        <td><div class="aspekContainer"></div>
+            <button type="button" class="btn btn-primary btn-sm btn-soft mt-2 add-aspek"><i class="fa-solid fa-plus me-1"></i>Tambah Aspek</button></td>
         <td><div class="d-flex flex-column aspekDContainer"></div></td>
         <td><div class="d-flex flex-column aspekTDContainer"></div></td>
-        <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-prosedur">Hapus Prosedur</button></td>
+        <td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-soft remove-prosedur"><i class="fa-solid fa-trash-can me-1"></i>Hapus</button></td>
     `;
     container.appendChild(row);
 
-    // buat 1 aspek default
     const { divAspek, divD, divTD } = createAspekInput(prosedurCount, 0);
     row.querySelector('.aspekContainer').appendChild(divAspek);
     row.querySelector('.aspekDContainer').appendChild(divD);
@@ -121,11 +191,11 @@ document.getElementById('addProsedur').addEventListener('click', function() {
 
     aspekCounts[prosedurCount] = 1;
     prosedurCount++;
-});
+    });
 
-// Tambah aspek baru
-document.addEventListener('click', function(e) {
-    if(e.target && e.target.classList.contains('add-aspek')) {
+    // Tambah aspek
+    document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('add-aspek')) {
         const row = e.target.closest('tr');
         const index = Array.from(document.querySelectorAll('.prosedur-row')).indexOf(row);
         const aspekIndex = aspekCounts[index];
@@ -139,12 +209,41 @@ document.addEventListener('click', function(e) {
     }
 
     // Hapus prosedur
-    if(e.target && e.target.classList.contains('remove-prosedur')){
+    if (e.target && e.target.classList.contains('remove-prosedur')) {
         const row = e.target.closest('tr');
         const index = Array.from(document.querySelectorAll('.prosedur-row')).indexOf(row);
         aspekCounts.splice(index, 1);
         row.remove();
     }
-});
+    });
+
+    // D vs TD exclusive + disable logic
+    document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('d-check') || e.target.classList.contains('td-check')) {
+        const parentRow = e.target.closest('tr');
+        const allD = parentRow.querySelectorAll('.d-check');
+        const allTD = parentRow.querySelectorAll('.td-check');
+
+        allD.forEach((dBox, i) => {
+        const tdBox = allTD[i];
+        if (dBox.checked) {
+            tdBox.checked = false;
+            tdBox.disabled = true;
+        } else {
+            tdBox.disabled = false;
+        }
+        });
+
+        allTD.forEach((tdBox, i) => {
+        const dBox = allD[i];
+        if (tdBox.checked) {
+            dBox.checked = false;
+            dBox.disabled = true;
+        } else {
+            dBox.disabled = false;
+        }
+        });
+    }
+    });
 </script>
 {% endblock %}

@@ -191,6 +191,7 @@
               <a class="side-link {% if current == 'kelola_format' %}active{% endif %}" href="{% url 'kelola_format' %}"><i class="fa-solid fa-clipboard-list"></i> Kelola Format</a>
             {% else %}
               <a class="side-link {% if current == 'daftar_format_supervisi' %}active{% endif %}" href="{% url 'daftar_format_supervisi' %}"><i class="fa-solid fa-clipboard-check"></i> Daftar Format Supervisi</a>
+              <a class="side-link {% if current == 'ringkasan_saya' %}active{% endif %}" href="{% url 'ringkasan_saya' %}"><i class="fa-solid fa-clipboard-list"></i><span>Ringkasan Saya</span></a>
             {% endif %}
             <div class="divider"></div>
             <a class="side-link" href="{% url 'logout' %}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
