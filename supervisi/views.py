@@ -3,12 +3,12 @@ from .models import FormatSupervisi, ItemFormat, Supervisi, JawabanItem, AspekFo
 from .forms import JawabanForm
 from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.files.base import ContentFile
 import base64
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .forms import FormatSupervisiForm, ItemFormatForm, SupervisiForm
+from .forms import FormatSupervisiForm, ItemFormatForm, SupervisiForm, RegisterForm
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -17,20 +17,70 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from django.http import HttpResponse
 import os
 
+# ================== HELPERS (ROLE) ==================
+def hanya_kepala(view_func):
+    """Decorator: izinkan hanya user yang termasuk Kepala Ruangan (berbasis group)."""
+    from django.http import HttpResponseForbidden
+    def _wrapped(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.groups.filter(name="Kepala Ruangan").exists():
+            return view_func(request, *args, **kwargs)
+        return HttpResponseForbidden("Akses khusus Kepala Ruangan.")
+    return _wrapped
+
+def admin_required(user):
+    """Dipakai user_passes_test untuk halaman admin.
+       Kita konsisten gunakan is_staff (di-set saat register untuk Kepala Ruangan)."""
+    return user.is_staff
+
+# ================== REGISTER ==================
+def register(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+
+            # Pastikan group ada
+            kepala_group, _ = Group.objects.get_or_create(name="Kepala Ruangan")
+            perawat_group, _ = Group.objects.get_or_create(name="Perawat")
+
+            # Assign group + set is_staff berdasar pilihan role
+            selected_role = getattr(user, "_selected_role", "perawat")
+            if selected_role == "kepala":
+                user.groups.add(kepala_group)
+                user.is_staff = True      # <- penting agar diarahkan ke dashboard admin
+            else:
+                user.groups.add(perawat_group)
+                user.is_staff = False
+
+            user.save()
+
+            # Auto login & redirect sesuai peran
+            login(request, user)
+            messages.success(request, "Registrasi berhasil. Selamat datang!")
+
+            if user.is_staff:
+                return redirect("admin_dashboard")          # Kepala Ruangan
+            return redirect("daftar_format_supervisi")      # Perawat
+    else:
+        form = RegisterForm()
+
+    # Flags helper untuk template (opsional)
+    return render(request, "supervisi/register.html", {
+        "form": form,
+        "is_kepala": request.user.is_authenticated and request.user.groups.filter(name="Kepala Ruangan").exists(),
+        "is_perawat": request.user.is_authenticated and request.user.groups.filter(name="Perawat").exists(),
+    })
 
 # ================== LOGIN / LOGOUT ==================
 def user_login(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            # Redirect berdasarkan role
-            if user.is_staff:
-                return redirect('admin_dashboard')  # Admin/Kepala Ruangan
-            else:
-                return redirect('daftar_format_supervisi')  # Perawat
+            # Redirect berdasarkan peran (is_staff = Kepala Ruangan)
+            return redirect('admin_dashboard' if user.is_staff else 'daftar_format_supervisi')
         else:
             messages.error(request, "Username atau password salah")
     return render(request, 'supervisi/login.html')
@@ -40,34 +90,21 @@ def user_logout(request):
     logout(request)
     return redirect('login')
 
-
-# ================== HOME ==================
+# ================== HOME (AUTO-REDIRECT) ==================
 @login_required
 def home(request):
     # Redirect otomatis sesuai role
-    if request.user.is_staff:
-        return redirect('admin_dashboard')
-    else:
-        return redirect('daftar_format_supervisi')
-
+    return redirect('admin_dashboard' if request.user.is_staff else 'daftar_format_supervisi')
 
 # ================== ADMIN / KEPALA RUANGAN ==================
-def admin_required(user):
-    return user.is_staff
-
 def detail_supervisi_admin(request, supervisi_id):
-    # Ambil data supervisi berdasarkan ID
     supervisi = get_object_or_404(Supervisi, id=supervisi_id)
-
-    context = {
-        'supervisi': supervisi,
-    }
+    context = { 'supervisi': supervisi }
     return render(request, 'admin/detail_supervisi.html', context)
 
 def admin_dashboard(request):
     total_supervisi = Supervisi.objects.count()
     supervisi_terakhir = Supervisi.objects.order_by('-tanggal')[:10]
-
     context = {
         'total_supervisi': total_supervisi,
         'supervisi_terakhir': supervisi_terakhir,
@@ -78,7 +115,6 @@ def admin_dashboard(request):
 def daftar_supervisi(request):
     supervisi = Supervisi.objects.all().order_by('-tanggal')
     return render(request, 'admin/daftar_supervisi.html', {'supervisi': supervisi})
-
 
 def detail_supervisi(request, supervisi_id):
     supervisi = get_object_or_404(Supervisi, id=supervisi_id)
@@ -105,14 +141,12 @@ def edit_supervisi(request, pk):
     supervisi_obj = get_object_or_404(Supervisi, pk=pk)
 
     if request.method == "POST":
-        # Harus request.FILES untuk menerima file upload
         form = SupervisiForm(request.POST, request.FILES, instance=supervisi_obj)
         if form.is_valid():
             form.save()
             messages.success(request, "Data supervisi berhasil diperbarui.")
             return redirect('daftar_supervisi')
         else:
-            # Debug: tampilkan error form di console
             print(form.errors)
     else:
         form = SupervisiForm(instance=supervisi_obj)
@@ -121,7 +155,6 @@ def edit_supervisi(request, pk):
         'form': form,
         'supervisi_obj': supervisi_obj  # untuk preview TTD lama
     })
-
 
 @login_required
 @user_passes_test(admin_required)
@@ -199,7 +232,6 @@ def daftar_format_supervisi(request):
     formats = FormatSupervisi.objects.all()
     return render(request, "supervisi/format_list.html", {"formats": formats})
 
-
 @login_required
 def isi_supervisi(request, format_id):
     format_supervisi = get_object_or_404(FormatSupervisi, id=format_id)
@@ -241,10 +273,7 @@ def isi_supervisi(request, format_id):
                 )
 
         # Hitung skor akhir
-        if total_item > 0:
-            supervisi.skor_total = (total_d / total_item) * 100
-        else:
-            supervisi.skor_total = 0
+        supervisi.skor_total = (total_d / total_item) * 100 if total_item > 0 else 0
         supervisi.save()
 
         messages.success(request, "Data supervisi berhasil disimpan.")
@@ -255,8 +284,6 @@ def isi_supervisi(request, format_id):
         'items': items
     })
 
-
-
 # ================== HITUNG SKOR ==================
 def hitung_skor_total(supervisi_id):
     supervisi = Supervisi.objects.get(id=supervisi_id)
@@ -266,7 +293,7 @@ def hitung_skor_total(supervisi_id):
     supervisi.skor_total = (total_score / total_bobot) * 100 if total_bobot > 0 else 0
     supervisi.save()
 
-
+# ================== FORMAT (ADMIN) ==================
 def tambah_format_supervisi(request):
     if request.method == 'POST':
         form = FormatSupervisiForm(request.POST)
@@ -312,8 +339,8 @@ def tambah_item_format(request, format_id):
 
     return render(request, 'admin/item_form.html', {'format': format_supervisi})
 
+# ================== CETAK PDF ==================
 def cetak_supervisi_pdf(request, supervisi_id):
-    from .models import Supervisi  # sesuaikan path model
     supervisi = Supervisi.objects.get(id=supervisi_id)
 
     response = HttpResponse(content_type='application/pdf')
@@ -392,8 +419,6 @@ def cetak_supervisi_pdf(request, supervisi_id):
 
     # Gambar tanda tangan
     tanda_tangan_row = []
-    ttd_dir = os.path.join('media')
-
     if supervisi.ttd_perawat:
         ttd_perawat_path = supervisi.ttd_perawat.path
         tanda_tangan_row.append(Image(ttd_perawat_path, width=4*cm, height=2*cm))

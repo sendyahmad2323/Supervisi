@@ -1,87 +1,176 @@
 {% extends 'base.html' %}
-{% block title %}Isi Supervisi{% endblock %}
+{% block title %}
+  Isi Supervisi
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-file-signature me-2"></i>Isi Supervisi
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center fw-bold">Form Supervisi: {{ format.nama }}</h2>
+  <style>
+    /* ====== gaya khusus halaman ====== */
+    .section-card {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.1);
+      border-radius: 18px;
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.06);
+      padding: 18px;
+    }
+    .form-soft .form-control,
+    .form-soft .form-select {
+      border-radius: 12px;
+      border: 1px solid rgba(13, 110, 253, 0.15);
+    }
+    .form-soft label {
+      font-weight: 700;
+      color: #0f1e3a;
+    }
+    
+    /* tabel */
+    .table-wrap {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.1);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(13, 110, 253, 0.06);
+      overflow: hidden;
+    }
+    table.super {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    table.super thead th {
+      background: linear-gradient(135deg, #4a90e2, #357abd);
+      color: #fff;
+      font-weight: 700;
+      text-align: center;
+      padding: 0.75rem 0.75rem;
+      border: 0;
+    }
+    table.super tbody td {
+      background: #fff;
+      border-top: 1px solid #eef2ff;
+      vertical-align: top;
+      padding: 0.75rem 0.8rem;
+    }
+    table.super tbody tr:nth-child(even) td {
+      background: #fbfdff;
+    }
+    table.super td.checkbox-cell {
+      text-align: center;
+      width: 10%;
+    }
+    table.super td:first-child {
+      width: 40%;
+    }
+    table.super td:nth-child(2) {
+      width: 40%;
+    }
+    
+    /* checkbox lebih besar */
+    .form-check-input.super-check {
+      transform: scale(1.15);
+      cursor: pointer;
+      box-shadow: none;
+    }
+    
+    /* tombol simpan gaya biru */
+    .btn-primary.soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
+    }
+  </style>
 
-    <form method="post">
-        {% csrf_token %}
+  <div class="section-card mb-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:rgba(13,110,253,.12);color:#0d6efd;">
+        <i class="fa-solid fa-clipboard-list"></i>
+      </div>
+      <div class="flex-grow-1">
+        <h5 class="mb-0 fw-bold">{{ format.nama }}</h5>
+        <div class="text-muted small">Form Supervisi</div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Bagian Identitas Supervisi -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">TIM</label>
-                <select name="tim" class="form-select" required>
-                    <option value="">-- Pilih Tim --</option>
-                    <option value="1">Tim 1</option>
-                    <option value="2">Tim 2</option>
-                    <option value="3">Tim 3</option>
-                    <option value="4">Tim 4</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">Jenjang PK</label>
-                <input type="text" name="jenjang_pk" class="form-control" placeholder="Masukkan jenjang PK" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label fw-semibold">Ruang</label>
-                <input type="text" name="ruang" class="form-control" value="Imdad Hamid Lantai 2" required>
-            </div>
+  <form method="post" class="form-soft">
+    {% csrf_token %}
+
+    <!-- Identitas -->
+    <div class="section-card mb-3">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">TIM</label>
+          <select name="tim" class="form-select" required>
+            <option value="">-- Pilih Tim --</option>
+            <option value="1">Tim 1</option>
+            <option value="2">Tim 2</option>
+            <option value="3">Tim 3</option>
+            <option value="4">Tim 4</option>
+          </select>
         </div>
-
-        <!-- Bagian Tabel Supervisi -->
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle">
-                <thead class="table-primary text-center">
-                    <tr>
-                        <th style="width: 35%">Prosedur</th>
-                        <th style="width: 35%">Aspek</th>
-                        <th style="width: 15%">D</th>
-                        <th style="width: 15%">TD</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                        {% for aspek in item.aspek.all %}
-                        <tr>
-                            {% if forloop.first %}
-                            <td rowspan="{{ item.aspek.count }}" class="align-middle">{{ item.pertanyaan }}</td>
-                            {% endif %}
-                            <td>{{ aspek.nama_aspek }}</td>
-                            <td class="text-center">
-                                <input type="checkbox" name="d_{{ aspek.id }}" class="form-check-input"
-                                       onclick="toggleCheck('{{ aspek.id }}', 'd')">
-                            </td>
-                            <td class="text-center">
-                                <input type="checkbox" name="td_{{ aspek.id }}" class="form-check-input"
-                                       onclick="toggleCheck('{{ aspek.id }}', 'td')">
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">Belum ada data supervisi</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-md-4">
+          <label class="form-label">Jenjang PK</label>
+          <input type="text" name="jenjang_pk" class="form-control" placeholder="Masukkan jenjang PK" required />
         </div>
-
-        <!-- Tombol Submit -->
-        <div class="text-end mt-3">
-            <button type="submit" class="btn btn-success px-4">💾 Simpan</button>
+        <div class="col-md-4">
+          <label class="form-label">Ruang</label>
+          <input type="text" name="ruang" class="form-control" value="Imdad Hamid Lantai 2" required />
         </div>
-    </form>
-</div>
+      </div>
+    </div>
 
-<script>
-function toggleCheck(id, type) {
-    const dCheck = document.querySelector(`[name='d_${id}']`);
-    const tdCheck = document.querySelector(`[name='td_${id}']`);
+    <!-- Tabel -->
+    <div class="table-wrap">
+      <div class="table-responsive">
+        <table class="super">
+          <thead>
+            <tr>
+              <th>Prosedur</th>
+              <th>Aspek</th>
+              <th>D</th>
+              <th>TD</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              {% for aspek in item.aspek.all %}
+                <tr>
+                  {% if forloop.first %}
+                    <td rowspan="{{ item.aspek.count }}" class="align-top">{{ item.pertanyaan }}</td>
+                  {% endif %}
+                  <td>{{ aspek.nama_aspek }}</td>
+                  <td class="checkbox-cell">
+                    <input type="checkbox" name="d_{{ aspek.id }}" class="form-check-input super-check" onclick="toggleCheck('{{ aspek.id }}', 'd')" />
+                  </td>
+                  <td class="checkbox-cell">
+                    <input type="checkbox" name="td_{{ aspek.id }}" class="form-check-input super-check" onclick="toggleCheck('{{ aspek.id }}', 'td')" />
+                  </td>
+                </tr>
+              {% endfor %}
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">Belum ada data supervisi</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-    if (type === 'd' && dCheck.checked) tdCheck.checked = false;
-    if (type === 'td' && tdCheck.checked) dCheck.checked = false;
-}
-</script>
+    <!-- Submit -->
+    <div class="text-end mt-3">
+      <button type="submit" class="btn btn-primary soft px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan</button>
+    </div>
+  </form>
+
+  <script>
+    function toggleCheck(id, type) {
+      const dCheck = document.querySelector(`[name='d_${id}']`)
+      const tdCheck = document.querySelector(`[name='td_${id}']`)
+      if (type === 'd' && dCheck.checked) tdCheck.checked = false
+      if (type === 'td' && tdCheck.checked) dCheck.checked = false
+    }
+  </script>
 {% endblock %}
