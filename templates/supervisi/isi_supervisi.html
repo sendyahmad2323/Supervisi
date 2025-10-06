@@ -80,6 +80,40 @@
       font-weight: 700;
       box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
     }
+    
+    /* ==== Upload box (Drag & Drop) ==== */
+    .upload-box {
+      border: 2px dashed #cfe0ff;
+      border-radius: 14px;
+      background: #f7fbff;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .upload-box:hover {
+      background: #f1f7ff;
+      border-color: #9ec2ff;
+    }
+    .upload-box.dragover {
+      background: #e9f2ff;
+      border-color: #5a96ff;
+    }
+    .upload-box i {
+      font-size: 34px;
+      color: #6c8cff;
+    }
+    .upload-hint {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+    .preview-wrap img {
+      max-height: 120px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 4px;
+      background: #fff;
+    }
   </style>
 
   <div class="section-card mb-3">
@@ -94,7 +128,8 @@
     </div>
   </div>
 
-  <form method="post" class="form-soft">
+  <!-- enctype WAJIB untuk upload -->
+  <form method="post" class="form-soft" enctype="multipart/form-data">
     {% csrf_token %}
 
     <!-- Identitas -->
@@ -122,7 +157,7 @@
     </div>
 
     <!-- Tabel -->
-    <div class="table-wrap">
+    <div class="table-wrap mb-3">
       <div class="table-responsive">
         <table class="super">
           <thead>
@@ -159,6 +194,21 @@
       </div>
     </div>
 
+    <!-- TTD Perawat -->
+    <div class="section-card">
+      <label class="form-label d-block mb-2">Tanda Tangan Perawat</label>
+      <div id="dropZoneTTD" class="upload-box">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <p class="mb-1 fw-semibold" id="uploadText">Klik untuk upload atau drag &amp; drop</p>
+        <small class="upload-hint">Format: PNG, JPG (Max: 5MB)</small>
+        <input id="ttdInput" type="file" name="ttd_perawat" accept="image/*" hidden />
+      </div>
+      <div id="previewTTD" class="mt-3 preview-wrap" style="display:none;">
+        <div class="text-muted small mb-1">Preview tanda tangan:</div>
+        <img id="previewImg" src="#" alt="Preview TTD" />
+      </div>
+    </div>
+
     <!-- Submit -->
     <div class="text-end mt-3">
       <button type="submit" class="btn btn-primary soft px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan</button>
@@ -166,11 +216,65 @@
   </form>
 
   <script>
+    // Lock D/TD mutually exclusive
     function toggleCheck(id, type) {
       const dCheck = document.querySelector(`[name='d_${id}']`)
       const tdCheck = document.querySelector(`[name='td_${id}']`)
       if (type === 'd' && dCheck.checked) tdCheck.checked = false
       if (type === 'td' && tdCheck.checked) dCheck.checked = false
     }
+    
+    // Drag & Drop TTD Perawat
+    const dz = document.getElementById('dropZoneTTD')
+    const input = document.getElementById('ttdInput')
+    const previewWrap = document.getElementById('previewTTD')
+    const previewImg = document.getElementById('previewImg')
+    const uploadText = document.getElementById('uploadText')
+    
+    function handleFiles(file) {
+      if (!file) return
+      const okTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      if (!okTypes.includes(file.type)) {
+        alert('Format harus PNG/JPG')
+        input.value = ''
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran maksimal 5MB')
+        input.value = ''
+        return
+      }
+      uploadText.textContent = file.name
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        previewImg.src = e.target.result
+        previewWrap.style.display = ''
+      }
+      reader.readAsDataURL(file)
+    }
+    
+    dz.addEventListener('click', () => input.click())
+    input.addEventListener('change', (e) => handleFiles(e.target.files[0]))
+    ;['dragenter', 'dragover'].forEach((evt) =>
+      dz.addEventListener(evt, (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dz.classList.add('dragover')
+      })
+    )
+    ;['dragleave', 'drop'].forEach((evt) =>
+      dz.addEventListener(evt, (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        dz.classList.remove('dragover')
+      })
+    )
+    dz.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0]
+      if (file) {
+        input.files = e.dataTransfer.files
+        handleFiles(file)
+      }
+    })
   </script>
 {% endblock %}

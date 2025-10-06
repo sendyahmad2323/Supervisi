@@ -16,7 +16,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from django.http import HttpResponse
 from django.db.models import Avg, Q, Count
-from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
 import os
 
 # ================== HELPERS (ROLE) ==================
@@ -228,7 +228,8 @@ def isi_supervisi(request, format_id):
             perawat=request.user,
             tim=tim,
             jenjang_pk=jenjang_pk,
-            ruang=ruang
+            ruang=ruang,
+            ttd_perawat=request.FILES.get('ttd_perawat')  
         )
 
         total_d = 0
@@ -351,114 +352,135 @@ def tambah_item_format(request, format_id):
 
     return render(request, 'admin/item_form.html', {'format': format_supervisi})
 
-# ================== CETAK PDF ==================
+# ================== CETAK PDF (ReportLab, layout seperti HTML) ==================
 def cetak_supervisi_pdf(request, supervisi_id):
-    supervisi = Supervisi.objects.get(id=supervisi_id)
+    s = get_object_or_404(Supervisi.objects.select_related(
+        "format_supervisi", "perawat", "kepala_ruangan"
+    ), id=supervisi_id)
 
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="supervisi_{supervisi.id}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="supervisi_{s.id}.pdf"'
 
-    doc = SimpleDocTemplate(response, pagesize=A4,
-                            rightMargin=2*cm, leftMargin=2*cm,
-                            topMargin=2*cm, bottomMargin=1.5*cm)
+    doc = SimpleDocTemplate(
+        response, pagesize=A4,
+        leftMargin=1.4*cm, rightMargin=1.4*cm,
+        topMargin=1.4*cm, bottomMargin=1.4*cm
+    )
 
-    styles = getSampleStyleSheet()
-    style_title = ParagraphStyle('title', fontSize=14, leading=16, alignment=1, spaceAfter=10, spaceBefore=5)
-    style_table = ParagraphStyle('table', fontSize=10, leading=12)
-    style_normal = ParagraphStyle('normal', fontSize=11, leading=13)
+    css = getSampleStyleSheet()
+    st_title = ParagraphStyle('title', parent=css['Normal'],
+                              fontName='Times-Bold', fontSize=14, leading=16,
+                              alignment=1, spaceAfter=14, spaceBefore=5)
+    st_base = ParagraphStyle('base', parent=css['Normal'],
+                              fontName='Times-Roman', fontSize=12, leading=14)
+    st_small = ParagraphStyle('small', parent=css['Normal'],
+                              fontName='Times-Roman', fontSize=11.5, leading=13)
 
     elements = []
 
-    # Judul
-    elements.append(Paragraph("<b>FORM SUPERVISI KEPERAWATAN MONITORING BALANCE CAIRAN</b>", style_title))
+    # ======= Judul =======
+    elements.append(Paragraph("FORM SUPERVISI KEPERAWATAN MONITORING BALANCE CAIRAN", st_title))
     elements.append(Spacer(1, 10))
 
-    # Header informasi supervisi
+    # ======= Info Table =======
+    iw = doc.width
     info_data = [
-        ["Perawat:", supervisi.perawat.username],
-        ["Tim:", f"Tim {supervisi.tim}"],
-        ["Ruang:", supervisi.ruang],
-        ["Jenjang PK:", supervisi.jenjang_pk],
-        ["Skor Total:", f"{supervisi.skor_total:.1f}%"]
+        ["Perawat", f": {s.perawat.username}", "Tim", f": Tim {s.tim}"],
+        ["Ruang", f": {s.ruang}", "Jenjang PK", f": {s.jenjang_pk}"],
+        ["Skor Total", f": {s.skor_total:.1f}%", "", ""],
     ]
-    info_table = Table(info_data, colWidths=[4*cm, 10*cm])
-    info_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    info_tbl = Table(info_data, colWidths=[0.20*iw, 0.30*iw, 0.20*iw, 0.30*iw])
+    info_tbl.setStyle(TableStyle([
+        ('FONT', (0,0), (-1,-1), 'Times-Roman', 12),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
     ]))
-    elements.append(info_table)
+    elements.append(info_tbl)
     elements.append(Spacer(1, 12))
 
-    # Data tabel supervisi
-    data = [['PROSEDUR', 'ASPEK YANG DINILAI', 'D', 'TD']]
+    # ======= Main Table =======
+    col1 = 0.25 * iw
+    colD = 0.075 * iw
+    colTD = 0.075 * iw
+    col2 = iw - (col1 + colD + colTD)
 
-    for item in supervisi.format_supervisi.items.all():
+    data = [
+        [Paragraph("<b>PROSEDUR</b>", st_small),
+         Paragraph("<b>ASPEK YANG DINILAI</b>", st_small),
+         Paragraph("<b>PENILAIAN</b>", st_small), ""],
+        ["", "", Paragraph("<b>D</b>", st_small), Paragraph("<b>TD</b>", st_small)]
+    ]
+
+    for item in s.format_supervisi.items.all():
         aspek_list = list(item.aspek.all())
-        for i, aspek in enumerate(aspek_list):
-            if i == 0:
-                data.append([
-                    Paragraph(item.pertanyaan, style_table),
-                    Paragraph(aspek.nama_aspek, style_table),
-                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, d=True).exists() else "",
-                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, td=True).exists() else "",
-                ])
-            else:
-                data.append([
-                    "",
-                    Paragraph(aspek.nama_aspek, style_table),
-                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, d=True).exists() else "",
-                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, td=True).exists() else "",
-                ])
+        for idx, aspek in enumerate(aspek_list):
+            jd = "✓" if s.jawaban_aspek.filter(aspek=aspek, d=True).exists() else ""
+            jtd = "✓" if s.jawaban_aspek.filter(aspek=aspek, td=True).exists() else ""
+            data.append([
+                Paragraph(item.pertanyaan if idx == 0 else "", st_small),
+                Paragraph(f"{idx+1}. {aspek.nama_aspek}", st_small),
+                Paragraph(f"<para align='center'>{jd}</para>", st_small),
+                Paragraph(f"<para align='center'>{jtd}</para>", st_small),
+            ])
 
-    table = Table(data, colWidths=[4*cm, 9*cm, 1.2*cm, 1.2*cm])
-    table.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.8, colors.black),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
-        ('ALIGN', (-2, 1), (-1, -1), 'CENTER'),
+    tbl = Table(data, colWidths=[col1, col2, colD, colTD])
+    tbl.setStyle(TableStyle([
+        ('SPAN', (0,0), (0,1)),
+        ('SPAN', (1,0), (1,1)),
+        ('SPAN', (2,0), (3,0)),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('BOX',  (0,0), (-1,-1), 1, colors.black),
+        ('FONT', (0,0), (-1,1), 'Times-Bold', 12),
+        ('ALIGN', (0,0), (-1,1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('ALIGN', (2,2), (3,-1), 'CENTER'),
+        ('FONT', (0,2), (-1,-1), 'Times-Roman', 12),
+        ('LEFTPADDING', (0,0), (-1,-1), 6),
+        ('RIGHTPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 5),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ('BACKGROUND', (0,0), (-1,1), colors.whitesmoke),
     ]))
-    elements.append(table)
-    elements.append(Spacer(1, 30))
+    elements.append(tbl)
 
-    # Bagian tanda tangan
-    elements.append(Paragraph("<b>Perawat yang Disupervisi</b>", style_normal))
-    elements.append(Paragraph("<b>Supervisor</b>", style_normal))
+    # ======= Tambah jarak besar sebelum tanda tangan =======
     elements.append(Spacer(1, 40))
 
-    # Gambar tanda tangan
-    tanda_tangan_row = []
-    if supervisi.ttd_perawat:
-        ttd_perawat_path = supervisi.ttd_perawat.path
-        tanda_tangan_row.append(Image(ttd_perawat_path, width=4*cm, height=2*cm))
-    else:
-        tanda_tangan_row.append(Paragraph("(Belum ada tanda tangan)", style_table))
-
-    if supervisi.ttd_kepala:
-        ttd_kepala_path = supervisi.ttd_kepala.path
-        tanda_tangan_row.append(Image(ttd_kepala_path, width=4*cm, height=2*cm))
-    else:
-        tanda_tangan_row.append(Paragraph("(Belum ada tanda tangan)", style_table))
-
-    ttd_table = Table([tanda_tangan_row], colWidths=[7*cm, 7*cm])
-    ttd_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    # ======= Footer =======
+    lbl = Table([["PERAWAT YANG DI SUPERVISI", "SUPERVISOR"]],
+                colWidths=[iw/2, iw/2])
+    lbl.setStyle(TableStyle([
+        ('FONT', (0,0), (-1,-1), 'Times-Bold', 12),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 30),
     ]))
-    elements.append(ttd_table)
+    elements.append(lbl)
 
-    # Nama bawah tanda tangan
-    nama_ttd = [[
-        Paragraph(f"({supervisi.perawat.username})", style_table),
-        Paragraph(f"({supervisi.kepala_ruangan or 'Supervisor'})", style_table)
-    ]]
-    nama_table = Table(nama_ttd, colWidths=[7*cm, 7*cm])
-    nama_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    # Tanda tangan (gambar)
+    left_img = Image(s.ttd_perawat.path, width=4*cm, height=2.3*cm) if s.ttd_perawat else Spacer(1, 2.3*cm)
+    right_img = Image(s.ttd_kepala.path, width=4*cm, height=2.3*cm) if s.ttd_kepala else Spacer(1, 2.3*cm)
+    ttd = Table([[left_img, right_img]], colWidths=[iw/2, iw/2])
+    ttd.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
-    elements.append(nama_table)
+    elements.append(ttd)
+
+    # Nama + NIP
+    sup_name = (s.kepala_ruangan.get_full_name()
+                if s.kepala_ruangan and s.kepala_ruangan.get_full_name()
+                else "Ns. Riska Sabrianli, S.Kep., M.Kep")
+    names = Table([
+        [Paragraph(f"<u>{s.perawat.username}</u>", st_small),
+         Paragraph(f"<u>{sup_name}</u><br/>NIP : 198211220060801", st_small)]
+    ], colWidths=[iw/2, iw/2])
+    names.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('TOPPADDING', (0,0), (-1,-1), 8),
+    ]))
+    elements.append(names)
 
     doc.build(elements)
     return response
