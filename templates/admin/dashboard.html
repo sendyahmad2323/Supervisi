@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <!-- Total Supervisi -->
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Supervisi</h5>
+                    <p class="card-text">{{ total_supervisi }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supervisi Terakhir -->
+        <div class="col-md-8">
+            <h4>Supervisi Terakhir</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Perawat</th>
+                        <th>Format</th>
+                        <th>Skor</th>
+                        <th>Tanda Tangan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in supervisi_terakhir %}
+                    <tr>
+                        <td>{{ s.perawat.username }}</td>
+                        <td>{{ s.format_supervisi.nama }}</td>
+                        <td>{{ s.skor_total }}%</td>
+                        <td>{% if s.ttd_kepala %} Ada {% else %} Belum {% endif %}</td>
+                        <td>
+                            <a href="{% url 'detail_supervisi' s.id %}" class="btn btn-sm btn-primary">Detail</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">Belum ada supervisi</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

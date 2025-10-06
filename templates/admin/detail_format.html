@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load supervisi_tags %}
+
+{% block title %}Detail Format{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Detail Format: {{ format.nama }}</h2>
+        <a href="{% url 'kelola_format' %}" class="btn btn-secondary">Kembali</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>ID Format:</strong> {{ format.id }}</p>
+            <p><strong>Nama Format:</strong> {{ format.nama }}</p>
+            <p><strong>Deskripsi:</strong> {{ format.deskripsi }}</p>
+            <p><strong>Jumlah Item:</strong> {{ format.items.count }}</p>
+            <p><strong>Jumlah Aspek:</strong> {{ format.items.all|sum_aspek }}</p>
+        </div>
+    </div>
+
+    <h4>Daftar Item dan Aspek</h4>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Item</th>
+                    <th>Jumlah Aspek</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in format.items.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.nama }}</td>
+                    <td>{{ item.aspek.count }}</td>
+                    <td>
+                        <a href="{% url 'edit_format' item.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'hapus_format' item.pk %}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Yakin ingin menghapus item ini?');">Hapus</a>
+                        <a href="{% url 'detail_format' item.pk %}" class="btn btn-sm btn-info">Detail</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">Belum ada item</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

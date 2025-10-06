@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load supervisi_tags %}
+{% block title %}Kelola Format{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Kelola Format Supervisi</h2>
+        <a href="{% url 'tambah_format_supervisi' %}" class="btn btn-primary">Tambah Format</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Nama Format</th>
+                    <th scope="col">Jumlah Item</th>
+                    <th scope="col">Jumlah Aspek</th>
+                    <th scope="col">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in formats %}
+                <tr>
+                    <td>{{ f.id }}</td>
+                    <td>{{ f.nama }}</td>
+                    <td>{{ f.items.count }}</td>
+                    <td>{{ f.items.all|sum_aspek }}</td>
+                    <td>
+                        <a href="{% url 'edit_format' f.pk %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'hapus_format' f.pk %}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Yakin ingin menghapus format ini?');">Hapus</a>
+                        <a href="{% url 'tambah_item_format' f.id %}" class="btn btn-sm btn-success">Tambah Item</a>
+                        <a href="{% url 'detail_format' f.pk %}" class="btn btn-sm btn-info">Detail</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Belum ada format</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

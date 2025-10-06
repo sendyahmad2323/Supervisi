@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar Supervisi{% endblock %}
+
+{% block content %}
+<h2>Daftar Supervisi</h2>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Perawat</th>
+            <th>Format</th>
+            <th>Skor</th>
+            <th>Tanda Tangan</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in supervisi %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td>{{ s.perawat.username }}</td>
+            <td>{{ s.format_supervisi.nama }}</td>
+            <td>{{ s.skor_total }}%</td>
+            <td>{% if s.ttd_kepala %} Ada {% else %} Belum {% endif %}</td>
+            <td>
+                <a href="{% url 'detail_supervisi' s.id %}" class="btn btn-sm btn-info">Detail</a>
+                <a href="{% url 'edit_supervisi' s.id %}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'hapus_supervisi' s.id %}" class="btn btn-sm btn-danger"
+                   onclick="return confirm('Yakin ingin menghapus supervisi ini?');">Hapus</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center">Belum ada supervisi</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

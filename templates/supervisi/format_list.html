@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Pilih Format Supervisi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Pilih Format Supervisi</h2>
+
+    {% if formats %}
+    <ul class="list-group">
+        {% for f in formats %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ f.nama }}
+            <a href="{% url 'isi_supervisi' f.id %}" class="btn btn-sm btn-primary">Isi</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-center">Belum ada format supervisi.</p>
+    {% endif %}
+</div>
+{% endblock %}

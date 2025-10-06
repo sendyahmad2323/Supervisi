@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Supervisi Ners{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            background-color: #f0f2f5;
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #0d6efd;
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px 20px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        .sidebar a:hover {
+            background-color: #0b5ed7;
+        }
+        .content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar h4 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h4>Supervisi Ners</h4>
+        {% if user.is_authenticated %}
+            {% if user.is_staff %}
+                <!-- Admin / Kepala Ruangan -->
+                <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+                <a href="{% url 'daftar_supervisi' %}">Daftar Supervisi</a>
+                <a href="{% url 'kelola_perawat' %}">Kelola Perawat</a>
+                <a href="{% url 'kelola_format' %}">Kelola Format</a>
+            {% else %}
+                <!-- Perawat -->
+                <a href="{% url 'daftar_format_supervisi' %}">Daftar Format Supervisi</a>
+                {# Hati-hati, isi_supervisi butuh format_id. Jangan pakai langsung di sidebar #}
+                {# Contoh: Jika ingin link ke format pertama atau dinamis, harus pakai loop di template halaman daftar format #}
+            {% endif %}
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </div>
+
+    <!-- Konten utama -->
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

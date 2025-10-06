@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Hapus Format</h2>
+<p>Apakah Anda yakin ingin menghapus format <strong>{{ format.nama_format }}</strong>?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Hapus</button>
+    <a href="{% url 'kelola_format' %}" class="btn btn-secondary">Batal</a>
+</form>
+{% endblock %}
