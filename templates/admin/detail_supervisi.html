@@ -4,46 +4,154 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Detail Supervisi #{{ supervisi.id }}</h2>
-    <p>Perawat: {{ supervisi.perawat.username }}</p>
-    <p>Format: {{ supervisi.format_supervisi.nama }}</p>
-    <p>Skor Total: {{ supervisi.skor_total }}%</p>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Detail Supervisi #{{ supervisi.id }}</h4>
+        </div>
+        <div class="card-body">
+            <!-- Informasi Supervisi -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <p><strong>Perawat:</strong> {{ supervisi.perawat.username }}</p>
+                    <p><strong>Format:</strong> {{ supervisi.format_supervisi.nama }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Tim:</strong> Tim {{ supervisi.tim }}</p>
+                    <p><strong>Jenjang PK:</strong> {{ supervisi.jenjang_pk }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Ruang:</strong> {{ supervisi.ruang }}</p>
+                    <p><strong>Skor Total:</strong> {{ supervisi.skor_total|floatformat:1 }}%</p>
+                    <div class="progress mb-3" style="height: 12px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ supervisi.skor_total }}%"></div>
+                    </div>
+                </div>
+            </div>
 
-    <h4>Hasil Supervisi:</h4>
-    <table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Prosedur</th>
-            <th>Aspek yang Dinilai</th>
-            <th>D</th>
-            <th>TD</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in supervisi.format_supervisi.items.all %}
-            {% for aspek in item.aspek.all %}
-            <tr>
-                {% if forloop.first %}
-                <td rowspan="{{ item.aspek.count }}">{{ item.pertanyaan }}</td>
-                {% endif %}
+            <hr>
 
-                <td>{{ aspek.nama_aspek }}</td>
+            <!-- Tabel Hasil Supervisi -->
+            <h5>Hasil Supervisi:</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th>Prosedur</th>
+                            <th>Aspek yang Dinilai</th>
+                            <th class="text-center">D</th>
+                            <th class="text-center">TD</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in supervisi.format_supervisi.items.all %}
+                            {% for aspek in item.aspek.all %}
+                            <tr>
+                                {% if forloop.first %}
+                                <td rowspan="{{ item.aspek.count }}">{{ item.pertanyaan }}</td>
+                                {% endif %}
+                                <td>{{ aspek.nama_aspek }}</td>
 
-                {% comment %} Cek JawabanAspek {% endcomment %}
-                {% with supervisi.jawaban_aspek.all|dictsort:"id" as jawaban_aspeks %}
-                {% for ja in jawaban_aspeks %}
-                    {% if ja.aspek.id == aspek.id %}
-                        <td class="text-center"><input type="checkbox" disabled {% if ja.d %}checked{% endif %}></td>
-                        <td class="text-center"><input type="checkbox" disabled {% if ja.td %}checked{% endif %}></td>
+                                {% with supervisi.jawaban_aspek.all|dictsort:"id" as jawaban_aspeks %}
+                                    {% for ja in jawaban_aspeks %}
+                                        {% if ja.aspek.id == aspek.id %}
+                                            <td class="text-center">
+                                                <input type="checkbox" disabled {% if ja.d %}checked{% endif %}>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" disabled {% if ja.td %}checked{% endif %}>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <hr>
+
+            <!-- Bagian Tanda Tangan -->
+            <h5 class="mt-4 mb-3">Tanda Tangan</h5>
+            <div class="row text-center">
+                <!-- Perawat -->
+                <div class="col-md-6">
+                    <p><strong>Perawat yang Disupervisi</strong></p>
+                    {% if supervisi.ttd_perawat %}
+                        <img src="{{ supervisi.ttd_perawat.url }}" alt="TTD Perawat" class="img-fluid" style="max-height: 120px;">
+                    {% else %}
+                        <p class="text-muted">Belum ada tanda tangan</p>
                     {% endif %}
-                {% endfor %}
-                {% endwith %}
 
-            </tr>
-            {% endfor %}
-        {% endfor %}
-    </tbody>
-</table>
+                    <!-- Form Upload Perawat -->
+                    <form method="post" enctype="multipart/form-data" class="mt-3">
+                        {% csrf_token %}
+                        <input type="file" name="ttd_perawat" accept="image/*" class="form-control mb-2" required>
+                        <button type="submit" name="upload_ttd_perawat" class="btn btn-primary w-100">
+                            <i class="bi bi-upload me-1"></i> Upload TTD Perawat
+                        </button>
+                    </form>
 
+                    <p class="mt-3 mb-0">{{ supervisi.perawat.get_full_name|default:supervisi.perawat.username }}</p>
+                </div>
+
+                <!-- Kepala Ruangan -->
+                <div class="col-md-6">
+                    <p><strong>Kepala Ruangan</strong></p>
+                    {% if supervisi.ttd_kepala %}
+                        <img src="{{ supervisi.ttd_kepala.url }}" alt="TTD Kepala Ruangan" class="img-fluid" style="max-height: 120px;">
+                    {% else %}
+                        <p class="text-muted">Belum ada tanda tangan</p>
+                    {% endif %}
+
+                    <!-- Form Upload Kepala Ruangan -->
+                    <form method="post" enctype="multipart/form-data" class="mt-3">
+                        {% csrf_token %}
+                        <input type="file" name="ttd_kepala" accept="image/*" class="form-control mb-2" required>
+                        <button type="submit" name="upload_ttd_kepala" class="btn btn-success w-100">
+                            <i class="bi bi-upload me-1"></i> Upload TTD Kepala Ruangan
+                        </button>
+                    </form>
+
+                    <p class="mt-3 mb-0">
+                        {{ supervisi.kepala_ruangan.get_full_name|default:"Nama Kepala Ruangan Belum Diisi" }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Kembali
+                </a>
+                <a href="{% url 'cetak_supervisi_pdf' supervisi.id %}" class="btn btn-danger ms-2">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .card {
+        border-radius: 12px;
+    }
+    .progress {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    input[type=checkbox] {
+        width: 18px;
+        height: 18px;
+    }
+    img {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 4px;
+        background: #fff;
+    }
+</style>
 {% endblock %}

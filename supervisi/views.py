@@ -9,6 +9,14 @@ import base64
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import FormatSupervisiForm, ItemFormatForm, SupervisiForm
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from django.http import HttpResponse
+import os
+
 
 # ================== LOGIN / LOGOUT ==================
 def user_login(request):
@@ -47,15 +55,24 @@ def home(request):
 def admin_required(user):
     return user.is_staff
 
-@user_passes_test(admin_required)
+def detail_supervisi_admin(request, supervisi_id):
+    # Ambil data supervisi berdasarkan ID
+    supervisi = get_object_or_404(Supervisi, id=supervisi_id)
+
+    context = {
+        'supervisi': supervisi,
+    }
+    return render(request, 'admin/detail_supervisi.html', context)
+
 def admin_dashboard(request):
     total_supervisi = Supervisi.objects.count()
-    supervisi_terakhir = Supervisi.objects.order_by('-tanggal')[:5]
-    return render(request, 'admin/dashboard.html', {
-        'total_supervisi': total_supervisi,
-        'supervisi_terakhir': supervisi_terakhir
-    })
+    supervisi_terakhir = Supervisi.objects.order_by('-tanggal')[:10]
 
+    context = {
+        'total_supervisi': total_supervisi,
+        'supervisi_terakhir': supervisi_terakhir,
+    }
+    return render(request, 'admin/dashboard.html', context)
 
 @user_passes_test(admin_required)
 def daftar_supervisi(request):
@@ -63,22 +80,24 @@ def daftar_supervisi(request):
     return render(request, 'admin/daftar_supervisi.html', {'supervisi': supervisi})
 
 
-@login_required
-@user_passes_test(admin_required)
-def detail_supervisi(request, id):
-    supervisi = get_object_or_404(Supervisi, id=id)
-    
-    # Ambil semua ItemFormat terkait format supervisi
-    items = supervisi.format_supervisi.items.prefetch_related('aspek')
-    
-    # Ambil jawaban untuk supervisi ini
-    jawaban_dict = {j.item.id: j.jawaban for j in supervisi.jawaban.all()}
+def detail_supervisi(request, supervisi_id):
+    supervisi = get_object_or_404(Supervisi, id=supervisi_id)
 
-    return render(request, 'admin/detail_supervisi.html', {
-        'supervisi': supervisi,
-        'items': items,
-        'jawaban_dict': jawaban_dict
-    })
+    # proses upload TTD
+    if request.method == "POST":
+        if 'upload_ttd_perawat' in request.POST:
+            supervisi.ttd_perawat = request.FILES.get('ttd_perawat')
+            supervisi.save()
+            messages.success(request, "TTD Perawat berhasil diupload.")
+            return redirect('detail_supervisi', supervisi_id=supervisi.id)
+
+        elif 'upload_ttd_kepala' in request.POST:
+            supervisi.ttd_kepala = request.FILES.get('ttd_kepala')
+            supervisi.save()
+            messages.success(request, "TTD Kepala Ruangan berhasil diupload.")
+            return redirect('detail_supervisi', supervisi_id=supervisi.id)
+
+    return render(request, 'admin/detail_supervisi.html', {'supervisi': supervisi})
 
 @login_required
 @user_passes_test(admin_required)
@@ -125,10 +144,6 @@ class PerawatForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
-
-# views.py
-from django.shortcuts import render, redirect
-from .forms import PerawatForm
 
 def tambah_perawat(request):
     if request.method == 'POST':
@@ -191,16 +206,32 @@ def isi_supervisi(request, format_id):
     items = format_supervisi.items.prefetch_related('aspek')
 
     if request.method == 'POST':
+        tim = request.POST.get('tim')
+        jenjang_pk = request.POST.get('jenjang_pk')
+        ruang = request.POST.get('ruang', 'Imdad Hamid Lantai 2')
+
         supervisi = Supervisi.objects.create(
             format_supervisi=format_supervisi,
-            perawat=request.user
+            perawat=request.user,
+            tim=tim,
+            jenjang_pk=jenjang_pk,
+            ruang=ruang
         )
 
-        # loop tiap item dan aspek untuk simpan D/TD
+        total_d = 0
+        total_item = 0
+
+        # Loop tiap item dan aspek untuk simpan D/TD/TDD
         for item in items:
             for aspek in item.aspek.all():
                 d = request.POST.get(f"d_{aspek.id}") == "on"
                 td = request.POST.get(f"td_{aspek.id}") == "on"
+                tdd = request.POST.get(f"tdd_{aspek.id}") == "on"
+
+                if not tdd:  # hanya dihitung kalau bukan TDD
+                    total_item += 1
+                    if d:
+                        total_d += 1
 
                 JawabanAspek.objects.create(
                     supervisi=supervisi,
@@ -209,9 +240,20 @@ def isi_supervisi(request, format_id):
                     td=td
                 )
 
+        # Hitung skor akhir
+        if total_item > 0:
+            supervisi.skor_total = (total_d / total_item) * 100
+        else:
+            supervisi.skor_total = 0
+        supervisi.save()
+
+        messages.success(request, "Data supervisi berhasil disimpan.")
         return redirect('daftar_format_supervisi')
 
-    return render(request, 'supervisi/isi_supervisi.html', {'format': format_supervisi, 'items': items})
+    return render(request, 'supervisi/isi_supervisi.html', {
+        'format': format_supervisi,
+        'items': items
+    })
 
 
 
@@ -269,3 +311,117 @@ def tambah_item_format(request, format_id):
         return redirect('kelola_format')
 
     return render(request, 'admin/item_form.html', {'format': format_supervisi})
+
+def cetak_supervisi_pdf(request, supervisi_id):
+    from .models import Supervisi  # sesuaikan path model
+    supervisi = Supervisi.objects.get(id=supervisi_id)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="supervisi_{supervisi.id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4,
+                            rightMargin=2*cm, leftMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=1.5*cm)
+
+    styles = getSampleStyleSheet()
+    style_title = ParagraphStyle('title', fontSize=14, leading=16, alignment=1, spaceAfter=10, spaceBefore=5)
+    style_table = ParagraphStyle('table', fontSize=10, leading=12)
+    style_normal = ParagraphStyle('normal', fontSize=11, leading=13)
+
+    elements = []
+
+    # Judul
+    elements.append(Paragraph("<b>FORM SUPERVISI KEPERAWATAN MONITORING BALANCE CAIRAN</b>", style_title))
+    elements.append(Spacer(1, 10))
+
+    # Header informasi supervisi
+    info_data = [
+        ["Perawat:", supervisi.perawat.username],
+        ["Tim:", f"Tim {supervisi.tim}"],
+        ["Ruang:", supervisi.ruang],
+        ["Jenjang PK:", supervisi.jenjang_pk],
+        ["Skor Total:", f"{supervisi.skor_total:.1f}%"]
+    ]
+    info_table = Table(info_data, colWidths=[4*cm, 10*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 12))
+
+    # Data tabel supervisi
+    data = [['PROSEDUR', 'ASPEK YANG DINILAI', 'D', 'TD']]
+
+    for item in supervisi.format_supervisi.items.all():
+        aspek_list = list(item.aspek.all())
+        for i, aspek in enumerate(aspek_list):
+            if i == 0:
+                data.append([
+                    Paragraph(item.pertanyaan, style_table),
+                    Paragraph(aspek.nama_aspek, style_table),
+                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, d=True).exists() else "",
+                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, td=True).exists() else "",
+                ])
+            else:
+                data.append([
+                    "",
+                    Paragraph(aspek.nama_aspek, style_table),
+                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, d=True).exists() else "",
+                    "✓" if supervisi.jawaban_aspek.filter(aspek=aspek, td=True).exists() else "",
+                ])
+
+    table = Table(data, colWidths=[4*cm, 9*cm, 1.2*cm, 1.2*cm])
+    table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.8, colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+        ('ALIGN', (-2, 1), (-1, -1), 'CENTER'),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 30))
+
+    # Bagian tanda tangan
+    elements.append(Paragraph("<b>Perawat yang Disupervisi</b>", style_normal))
+    elements.append(Paragraph("<b>Supervisor</b>", style_normal))
+    elements.append(Spacer(1, 40))
+
+    # Gambar tanda tangan
+    tanda_tangan_row = []
+    ttd_dir = os.path.join('media')
+
+    if supervisi.ttd_perawat:
+        ttd_perawat_path = supervisi.ttd_perawat.path
+        tanda_tangan_row.append(Image(ttd_perawat_path, width=4*cm, height=2*cm))
+    else:
+        tanda_tangan_row.append(Paragraph("(Belum ada tanda tangan)", style_table))
+
+    if supervisi.ttd_kepala:
+        ttd_kepala_path = supervisi.ttd_kepala.path
+        tanda_tangan_row.append(Image(ttd_kepala_path, width=4*cm, height=2*cm))
+    else:
+        tanda_tangan_row.append(Paragraph("(Belum ada tanda tangan)", style_table))
+
+    ttd_table = Table([tanda_tangan_row], colWidths=[7*cm, 7*cm])
+    ttd_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    ]))
+    elements.append(ttd_table)
+
+    # Nama bawah tanda tangan
+    nama_ttd = [[
+        Paragraph(f"({supervisi.perawat.username})", style_table),
+        Paragraph(f"({supervisi.kepala_ruangan or 'Supervisor'})", style_table)
+    ]]
+    nama_table = Table(nama_ttd, colWidths=[7*cm, 7*cm])
+    nama_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+    ]))
+    elements.append(nama_table)
+
+    doc.build(elements)
+    return response

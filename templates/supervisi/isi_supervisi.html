@@ -3,40 +3,85 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4 text-center">Isi Supervisi: {{ format.nama }}</h2>
+    <h2 class="mb-4 text-center fw-bold">Form Supervisi: {{ format.nama }}</h2>
 
     <form method="post">
-{% csrf_token %}
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Prosedur</th>
-            <th>Aspek</th>
-            <th>D</th>
-            <th>TD</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in items %}
-            {% for aspek in item.aspek.all %}
-            <tr>
-                {% if forloop.first %}
-                <td rowspan="{{ item.aspek.count }}">{{ item.pertanyaan }}</td>
-                {% endif %}
-                <td>{{ aspek.nama_aspek }}</td>
-                <td class="text-center">
-                    <input type="checkbox" name="d_{{ aspek.id }}">
-                </td>
-                <td class="text-center">
-                    <input type="checkbox" name="td_{{ aspek.id }}">
-                </td>
-            </tr>
-            {% endfor %}
-        {% endfor %}
-    </tbody>
-</table>
-<button type="submit" class="btn btn-success">Simpan</button>
-</form>
+        {% csrf_token %}
 
+        <!-- Bagian Identitas Supervisi -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">TIM</label>
+                <select name="tim" class="form-select" required>
+                    <option value="">-- Pilih Tim --</option>
+                    <option value="1">Tim 1</option>
+                    <option value="2">Tim 2</option>
+                    <option value="3">Tim 3</option>
+                    <option value="4">Tim 4</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Jenjang PK</label>
+                <input type="text" name="jenjang_pk" class="form-control" placeholder="Masukkan jenjang PK" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Ruang</label>
+                <input type="text" name="ruang" class="form-control" value="Imdad Hamid Lantai 2" required>
+            </div>
+        </div>
+
+        <!-- Bagian Tabel Supervisi -->
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-primary text-center">
+                    <tr>
+                        <th style="width: 35%">Prosedur</th>
+                        <th style="width: 35%">Aspek</th>
+                        <th style="width: 15%">D</th>
+                        <th style="width: 15%">TD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        {% for aspek in item.aspek.all %}
+                        <tr>
+                            {% if forloop.first %}
+                            <td rowspan="{{ item.aspek.count }}" class="align-middle">{{ item.pertanyaan }}</td>
+                            {% endif %}
+                            <td>{{ aspek.nama_aspek }}</td>
+                            <td class="text-center">
+                                <input type="checkbox" name="d_{{ aspek.id }}" class="form-check-input"
+                                       onclick="toggleCheck('{{ aspek.id }}', 'd')">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="td_{{ aspek.id }}" class="form-check-input"
+                                       onclick="toggleCheck('{{ aspek.id }}', 'td')">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Belum ada data supervisi</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tombol Submit -->
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success px-4">💾 Simpan</button>
+        </div>
+    </form>
 </div>
+
+<script>
+function toggleCheck(id, type) {
+    const dCheck = document.querySelector(`[name='d_${id}']`);
+    const tdCheck = document.querySelector(`[name='td_${id}']`);
+
+    if (type === 'd' && dCheck.checked) tdCheck.checked = false;
+    if (type === 'td' && tdCheck.checked) dCheck.checked = false;
+}
+</script>
 {% endblock %}
