@@ -5,242 +5,253 @@
 {% endblock %}
 
 {% block content %}
-  <style>
-    .card-soft {
-      background: #fff;
-      border: 1px solid rgba(13,110,253,0.08);
-      border-radius: var(--radius);
-      box-shadow: 0 10px 30px rgba(13,110,253,0.06);
-    }
-    .hero {
-      background: linear-gradient(145deg, rgba(13,110,253,.18), rgba(13,110,253,.08));
-      border: 1px solid rgba(13,110,253,.12);
-      border-radius: var(--radius);
-      box-shadow: 0 12px 28px rgba(13,110,253,.08);
-      padding: 18px;
-    }
-    .table thead th {
-      background: linear-gradient(145deg,#0d6efd,#2563eb);
-      color: #fff;
-      font-weight: 700;
-      border: 0;
-      text-align: center;
-    }
-    .table tbody td { vertical-align: top; }
-    .table-hover tbody tr:hover { background: rgba(13,110,253,.05); }
-    .progress {
-      height: 10px;
-      border-radius: 6px;
-      overflow: hidden;
-      background: #e2e8f0;
-    }
-    .progress-bar {
-      background: linear-gradient(90deg, #60a5fa, #2563eb);
-    }
-    img {
-      border: 1px solid rgba(13,110,253,.2);
-      border-radius: 10px;
-      padding: 4px;
-      background: #fff;
-      box-shadow: 0 6px 18px rgba(13,110,253,.08);
-    }
+<style>
+  .card-soft {
+    background: #fff;
+    border: 1px solid rgba(13,110,253,0.08);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 30px rgba(13,110,253,0.06);
+  }
+  .hero {
+    background: linear-gradient(145deg, rgba(13,110,253,.18), rgba(13,110,253,.08));
+    border: 1px solid rgba(13,110,253,.12);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 28px rgba(13,110,253,.08);
+    padding: 18px;
+  }
+  .table thead th {
+    background: linear-gradient(145deg,#0d6efd,#2563eb);
+    color: #fff;
+    font-weight: 700;
+    border: 0;
+    text-align: center;
+  }
+  .table tbody td { vertical-align: top; }
+  .table-hover tbody tr:hover { background: rgba(13,110,253,.05); }
+  .progress {
+    height: 10px; border-radius: 6px; overflow: hidden; background: #e2e8f0;
+  }
+  .progress-bar { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+  img {
+    border: 1px solid rgba(13,110,253,.2);
+    border-radius: 10px;
+    padding: 4px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(13,110,253,.08);
+  }
+  .upload-box {
+    border: 2px dashed rgba(13,110,253,0.4);
+    border-radius: 14px;
+    background: rgba(13,110,253,0.03);
+    padding: 2.2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .upload-box:hover {
+    border-color: #0d6efd;
+    background: rgba(13,110,253,0.06);
+  }
+  .upload-box.dragover {
+    background: rgba(13,110,253,0.12);
+    border-color: #0d6efd;
+  }
+  .upload-box i {
+    font-size: 2rem;
+    color: #0d6efd;
+    margin-bottom: 0.5rem;
+  }
+  .btn-soft {
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(13,110,253,.15);
+    transition: all .2s ease;
+  }
+  .btn-soft:hover { transform: translateY(-2px); }
+</style>
 
-    /* Drag & Drop Upload Box */
-    .upload-box {
-      border: 2px dashed rgba(13,110,253,0.4);
-      border-radius: 14px;
-      background: rgba(13,110,253,0.03);
-      padding: 2.2rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .upload-box:hover {
-      border-color: #0d6efd;
-      background: rgba(13,110,253,0.06);
-    }
-    .upload-box.dragover {
-      background: rgba(13,110,253,0.12);
-      border-color: #0d6efd;
-    }
-    .upload-box i {
-      font-size: 2rem;
-      color: #0d6efd;
-      margin-bottom: 0.5rem;
-    }
-    .upload-box small {
-      color: #6b7280;
-    }
-    .btn-soft {
-      border-radius: 12px;
-      font-weight: 700;
-      box-shadow: 0 6px 16px rgba(13,110,253,.15);
-      transition: all .2s ease;
-    }
-    .btn-soft:hover { transform: translateY(-2px); }
-  </style>
-
-  <!-- Header -->
-  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-      <h5 class="fw-bold mb-1">
-        <i class="fa-solid fa-clipboard-check me-2 text-primary"></i>
-        Detail Supervisi #{{ supervisi.id }}
-      </h5>
-      <div class="text-muted small">Data hasil supervisi lengkap dengan aspek penilaian dan tanda tangan</div>
-    </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-soft">
-        <i class="fa-solid fa-arrow-left me-1"></i>Kembali
-      </a>
-      <a href="{% url 'cetak_supervisi_pdf' supervisi.id %}" class="btn btn-danger btn-soft">
-        <i class="fa-solid fa-file-pdf me-1"></i>Download PDF
-      </a>
-    </div>
+<!-- Header -->
+<div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+  <div>
+    <h5 class="fw-bold mb-1">
+      <i class="fa-solid fa-clipboard-check me-2 text-primary"></i>
+      Detail Supervisi #{{ supervisi.id }}
+    </h5>
+    <div class="text-muted small">Data hasil supervisi lengkap dengan aspek penilaian, informasi kepala ruangan, dan tanda tangan</div>
   </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-soft">
+      <i class="fa-solid fa-arrow-left me-1"></i>Kembali
+    </a>
+    <a href="{% url 'cetak_supervisi_pdf' supervisi.id %}" class="btn btn-danger btn-soft">
+      <i class="fa-solid fa-file-pdf me-1"></i>Download PDF
+    </a>
+  </div>
+</div>
 
-  <!-- Informasi Supervisi -->
-  <div class="card-soft p-3 mb-3">
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div><strong>Perawat:</strong> {{ supervisi.perawat.username }}</div>
-        <div><strong>Format:</strong> {{ supervisi.format_supervisi.nama }}</div>
-      </div>
-      <div class="col-md-4">
-        <div><strong>Tim:</strong> Tim {{ supervisi.tim }}</div>
-        <div><strong>Jenjang PK:</strong> {{ supervisi.jenjang_pk }}</div>
-      </div>
-      <div class="col-md-4">
-        <div><strong>Ruang:</strong> {{ supervisi.ruang }}</div>
-        <div><strong>Skor Total:</strong> {{ supervisi.skor_total|floatformat:1 }}%</div>
-        <div class="progress mt-1">
-          <div class="progress-bar" style="width: {{ supervisi.skor_total }}%"></div>
-        </div>
+<!-- Informasi Supervisi -->
+<div class="card-soft p-3 mb-3">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div><strong>Perawat:</strong> {{ supervisi.perawat.username }}</div>
+      <div><strong>Format:</strong> {{ supervisi.format_supervisi.nama }}</div>
+    </div>
+    <div class="col-md-4">
+      <div><strong>Tim:</strong> Tim {{ supervisi.tim }}</div>
+      <div><strong>Jenjang PK:</strong> {{ supervisi.jenjang_pk }}</div>
+    </div>
+    <div class="col-md-4">
+      <div><strong>Ruang:</strong> {{ supervisi.ruang }}</div>
+      <div><strong>Skor Total:</strong> {{ supervisi.skor_total|floatformat:1 }}%</div>
+      <div class="progress mt-1">
+        <div class="progress-bar" style="width: {{ supervisi.skor_total }}%"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Hasil Supervisi -->
-  <div class="card-soft mb-3">
-    <div class="p-3 border-bottom">
-      <h6 class="fw-bold mb-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Hasil Supervisi</h6>
+<!-- Form Info Kepala Ruangan (baru) -->
+<div class="card-soft p-3 mb-3">
+  <h6 class="fw-bold mb-2"><i class="fa-solid fa-user-tie me-2 text-primary"></i>Informasi Kepala Ruangan</h6>
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    <div class="col-md-6">
+      <label class="form-label">Nama Kepala Ruangan</label>
+      <input type="text" name="kepala_nama" value="{{ supervisi.kepala_nama }}" class="form-control" placeholder="Contoh: Ns. Riska Sabrianli, S.Kep., M.Kep" />
     </div>
-    <div class="table-responsive p-2">
-      <table class="table table-hover align-middle mb-0">
-        <thead>
-          <tr>
-            <th>Prosedur</th>
-            <th>Aspek yang Dinilai</th>
-            <th class="text-center">D</th>
-            <th class="text-center">TD</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in supervisi.format_supervisi.items.all %}
-            {% for aspek in item.aspek.all %}
-              <tr>
-                {% if forloop.first %}
-                  <td rowspan="{{ item.aspek.count }}" class="align-top">{{ item.pertanyaan }}</td>
-                {% endif %}
-                <td>{{ aspek.nama_aspek }}</td>
+    <div class="col-md-6">
+      <label class="form-label">NIP Kepala Ruangan</label>
+      <input type="text" name="kepala_nip" value="{{ supervisi.kepala_nip }}" class="form-control" placeholder="Contoh: 198211220060801" />
+    </div>
+    <div class="col-12 text-end">
+      <button type="submit" name="save_kepala_info" class="btn btn-primary btn-soft">
+        <i class="fa-solid fa-save me-1"></i> Simpan Informasi
+      </button>
+    </div>
+  </form>
+</div>
 
-                {% with supervisi.jawaban_aspek.all|dictsort:"id" as jawaban_aspeks %}
-                  {% for ja in jawaban_aspeks %}
-                    {% if ja.aspek.id == aspek.id %}
-                      <td class="text-center">
-                        <input type="checkbox" disabled {% if ja.d %}checked{% endif %}>
-                      </td>
-                      <td class="text-center">
-                        <input type="checkbox" disabled {% if ja.td %}checked{% endif %}>
-                      </td>
-                    {% endif %}
-                  {% endfor %}
-                {% endwith %}
-              </tr>
-            {% endfor %}
+<!-- Hasil Supervisi -->
+<div class="card-soft mb-3">
+  <div class="p-3 border-bottom">
+    <h6 class="fw-bold mb-0"><i class="fa-solid fa-list-check me-2 text-primary"></i>Hasil Supervisi</h6>
+  </div>
+  <div class="table-responsive p-2">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Prosedur</th>
+          <th>Aspek yang Dinilai</th>
+          <th class="text-center">D</th>
+          <th class="text-center">TD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in supervisi.format_supervisi.items.all %}
+          {% for aspek in item.aspek.all %}
+            <tr>
+              {% if forloop.first %}
+                <td rowspan="{{ item.aspek.count }}" class="align-top">{{ item.pertanyaan }}</td>
+              {% endif %}
+              <td>{{ aspek.nama_aspek }}</td>
+
+              {% with supervisi.jawaban_aspek.all|dictsort:"id" as jawaban_aspeks %}
+                {% for ja in jawaban_aspeks %}
+                  {% if ja.aspek.id == aspek.id %}
+                    <td class="text-center">
+                      <input type="checkbox" disabled {% if ja.d %}checked{% endif %}>
+                    </td>
+                    <td class="text-center">
+                      <input type="checkbox" disabled {% if ja.td %}checked{% endif %}>
+                    </td>
+                  {% endif %}
+                {% endfor %}
+              {% endwith %}
+            </tr>
           {% endfor %}
-        </tbody>
-      </table>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tanda Tangan -->
+<div class="card-soft p-4">
+  <h6 class="fw-bold mb-3"><i class="fa-solid fa-signature me-2 text-primary"></i>Tanda Tangan</h6>
+  <div class="row text-center g-4">
+    <!-- Perawat -->
+    <div class="col-md-6">
+      <p class="fw-semibold">Perawat yang Disupervisi</p>
+      {% if supervisi.ttd_perawat %}
+        <img src="{{ supervisi.ttd_perawat.url }}" alt="TTD Perawat" class="img-fluid mb-3" style="max-height:120px;">
+      {% else %}
+        <p class="text-muted mb-3">Belum ada tanda tangan</p>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" id="formPerawat">
+        {% csrf_token %}
+        <div id="dropZonePerawat" class="upload-box">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p class="mb-1 fw-semibold">Klik untuk upload atau drag & drop</p>
+          <small>Format: PNG, JPG (Max: 5MB)</small>
+          <input type="file" name="ttd_perawat" accept="image/*" hidden required>
+        </div>
+        <button type="submit" name="upload_ttd_perawat" class="btn btn-primary btn-soft w-100 mt-3">
+          <i class="fa-solid fa-upload me-1"></i>Upload TTD Perawat
+        </button>
+      </form>
+    </div>
+
+    <!-- Kepala Ruangan -->
+    <div class="col-md-6">
+      <p class="fw-semibold">Kepala Ruangan</p>
+      {% if supervisi.ttd_kepala %}
+        <img src="{{ supervisi.ttd_kepala.url }}" alt="TTD Kepala" class="img-fluid mb-3" style="max-height:120px;">
+      {% else %}
+        <p class="text-muted mb-3">Belum ada tanda tangan</p>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" id="formKepala">
+        {% csrf_token %}
+        <div id="dropZoneKepala" class="upload-box">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p class="mb-1 fw-semibold">Klik untuk upload atau drag & drop</p>
+          <small>Format: PNG, JPG (Max: 5MB)</small>
+          <input type="file" name="ttd_kepala" accept="image/*" hidden required>
+        </div>
+        <button type="submit" name="upload_ttd_kepala" class="btn btn-success btn-soft w-100 mt-3">
+          <i class="fa-solid fa-upload me-1"></i>Upload TTD Kepala Ruangan
+        </button>
+      </form>
     </div>
   </div>
+</div>
 
-  <!-- Tanda Tangan -->
-  <div class="card-soft p-4">
-    <h6 class="fw-bold mb-3"><i class="fa-solid fa-signature me-2 text-primary"></i>Tanda Tangan</h6>
-    <div class="row text-center g-4">
-      <!-- Perawat -->
-      <div class="col-md-6">
-        <p class="fw-semibold">Perawat yang Disupervisi</p>
-        {% if supervisi.ttd_perawat %}
-          <img src="{{ supervisi.ttd_perawat.url }}" alt="TTD Perawat" class="img-fluid mb-3" style="max-height:120px;">
-        {% else %}
-          <p class="text-muted mb-3">Belum ada tanda tangan</p>
-        {% endif %}
+<script>
+  function setupDragDrop(zoneId) {
+    const zone = document.getElementById(zoneId)
+    const input = zone.querySelector('input[type=file]')
 
-        <form method="post" enctype="multipart/form-data" id="formPerawat">
-          {% csrf_token %}
-          <div id="dropZonePerawat" class="upload-box">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <p class="mb-1 fw-semibold">Klik untuk upload atau drag & drop</p>
-            <small>Format: PNG, JPG (Max: 5MB)</small>
-            <input type="file" name="ttd_perawat" accept="image/*" hidden required>
-          </div>
-          <button type="submit" name="upload_ttd_perawat" class="btn btn-primary btn-soft w-100 mt-3">
-            <i class="fa-solid fa-upload me-1"></i>Upload TTD Perawat
-          </button>
-        </form>
-      </div>
+    zone.addEventListener('click', () => input.click())
 
-      <!-- Kepala Ruangan -->
-      <div class="col-md-6">
-        <p class="fw-semibold">Kepala Ruangan</p>
-        {% if supervisi.ttd_kepala %}
-          <img src="{{ supervisi.ttd_kepala.url }}" alt="TTD Kepala" class="img-fluid mb-3" style="max-height:120px;">
-        {% else %}
-          <p class="text-muted mb-3">Belum ada tanda tangan</p>
-        {% endif %}
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      zone.classList.add('dragover')
+    })
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'))
 
-        <form method="post" enctype="multipart/form-data" id="formKepala">
-          {% csrf_token %}
-          <div id="dropZoneKepala" class="upload-box">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <p class="mb-1 fw-semibold">Klik untuk upload atau drag & drop</p>
-            <small>Format: PNG, JPG (Max: 5MB)</small>
-            <input type="file" name="ttd_kepala" accept="image/*" hidden required>
-          </div>
-          <button type="submit" name="upload_ttd_kepala" class="btn btn-success btn-soft w-100 mt-3">
-            <i class="fa-solid fa-upload me-1"></i>Upload TTD Kepala Ruangan
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault()
+      zone.classList.remove('dragover')
+      const file = e.dataTransfer.files[0]
+      input.files = e.dataTransfer.files
 
-  <script>
-    function setupDragDrop(zoneId) {
-      const zone = document.getElementById(zoneId)
-      const input = zone.querySelector('input[type=file]')
+      zone.querySelector('p').textContent = file.name
+      zone.querySelector('i').className = 'fa-solid fa-file-circle-check text-success'
+    })
+  }
 
-      zone.addEventListener('click', () => input.click())
-
-      zone.addEventListener('dragover', (e) => {
-        e.preventDefault()
-        zone.classList.add('dragover')
-      })
-      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'))
-
-      zone.addEventListener('drop', (e) => {
-        e.preventDefault()
-        zone.classList.remove('dragover')
-        const file = e.dataTransfer.files[0]
-        input.files = e.dataTransfer.files
-
-        zone.querySelector('p').textContent = file.name
-        zone.querySelector('i').className = 'fa-solid fa-file-circle-check text-success'
-      })
-    }
-
-    setupDragDrop('dropZonePerawat')
-    setupDragDrop('dropZoneKepala')
-  </script>
+  setupDragDrop('dropZonePerawat')
+  setupDragDrop('dropZoneKepala')
+</script>
 {% endblock %}

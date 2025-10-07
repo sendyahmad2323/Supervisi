@@ -5,176 +5,161 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Masuk — Healthcare System</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
     <style>
-      body {
-        box-sizing: border-box;
-        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-        min-height: 100vh;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      :root {
+        --light-blue: #e8f1ff;
+        --sky-blue: #bfdfff;
+        --soft-blue: #93c5fd;
+        --main-blue: #3b82f6;
+        --deep-blue: #2563eb;
       }
       
-      .login-container {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      /* Background gradient & glass effect */
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, var(--light-blue) 0%, var(--sky-blue) 50%, var(--main-blue) 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         overflow: hidden;
-        max-width: 450px;
-        margin: 2rem auto;
       }
-      .form-header {
-        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-        color: #fff;
-        padding: 2rem;
-        text-align: center;
-        position: relative;
-      }
-      .form-header::before {
+      
+      /* Soft blur overlay */
+      body::before {
         content: '';
         position: absolute;
         inset: 0;
+        background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.4), transparent 70%), radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.3), transparent 70%);
+        filter: blur(60px);
+        z-index: 0;
+      }
+      
+      .login-container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 480px;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(59, 130, 246, 0.25);
+        overflow: hidden;
+      }
+      
+      /* Header */
+      .form-header {
+        background: linear-gradient(135deg, var(--main-blue), var(--deep-blue));
+        color: white;
+        text-align: center;
+        padding: 2rem;
       }
       .form-header h2 {
+        font-weight: 700;
         margin: 0;
-        font-weight: 600;
-        position: relative;
-        z-index: 1;
       }
       .form-header .subtitle {
-        margin: 0.5rem 0 0;
-        opacity: 0.9;
         font-size: 0.9rem;
-        position: relative;
-        z-index: 1;
+        opacity: 0.9;
       }
+      
+      /* Body */
       .form-body {
         padding: 2rem;
       }
       .form-control {
-        border: 2px solid #e9ecef;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.7);
         border-radius: 12px;
         padding: 0.75rem 1rem;
-        font-size: 0.95rem;
         transition: all 0.3s ease;
-        background: #f8f9fa;
       }
       .form-control:focus {
-        border-color: #4a90e2;
-        box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
-        background: #fff;
+        border-color: var(--main-blue);
+        background: white;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
       }
       .input-group-text {
-        background: #f8f9fa;
-        border: 2px solid #e9ecef;
+        background: rgba(255, 255, 255, 0.7);
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-right: none;
         border-radius: 12px 0 0 12px;
-        color: #6c757d;
+        color: var(--deep-blue);
       }
       .input-group .form-control {
         border-left: none;
         border-radius: 0 12px 12px 0;
       }
-      .input-group:focus-within .input-group-text {
-        border-color: #4a90e2;
-        background: #fff;
-      }
       .btn-primary {
-        background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        background: linear-gradient(135deg, var(--main-blue), var(--deep-blue));
         border: none;
         border-radius: 12px;
         padding: 0.75rem 2rem;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        letter-spacing: 0.4px;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        transition: all 0.25s ease;
       }
       .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
       }
       .alert {
-        border-radius: 12px;
         border: none;
+        border-radius: 12px;
       }
       .alert-danger {
-        background: linear-gradient(135deg, rgba(255, 0, 0, 0.08), rgba(255, 0, 0, 0.06));
-        color: #b02a37;
-      }
-      .alert-success {
-        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(53, 122, 189, 0.1));
-        color: #4a90e2;
-      }
-      @media (max-width: 576px) {
-        .login-container {
-          margin: 1rem;
-          max-width: none;
-        }
-        .form-header,
-        .form-body {
-          padding: 1.5rem;
-        }
+        background: linear-gradient(135deg, rgba(255, 0, 0, 0.07), rgba(255, 0, 0, 0.05));
+        color: #a11f2c;
       }
     </style>
   </head>
-  <body class="nature-bg">
-    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100 py-4">
-      <div class="login-container">
-        <div class="form-header">
-          <h2><i class="fas fa-heartbeat me-2"></i>Healthcare System</h2>
-          <p class="subtitle">Sistem Manajemen Kesehatan</p>
-        </div>
-
-        <div class="form-body">
-          {% if messages %}
-            {% for m in messages %}
-              <div class="alert alert-{{ m.tags }} alert-dismissible fade show" role="alert">
-                {{ m }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-
-          <form method="post" action="{% url 'login' %}">
-            {% csrf_token %}
-
-            <div class="mb-3">
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                <input type="text" name="username" class="form-control" placeholder="Username" required />
-              </div>
+  <body>
+    <div class="login-container">
+      <div class="form-header">
+        <h2><i class="fas fa-heartbeat me-2"></i>Healthcare System</h2>
+        <p class="subtitle">Sistem Manajemen Kesehatan</p>
+      </div>
+      <div class="form-body">
+        {% if messages %}
+          {% for m in messages %}
+            <div class="alert alert-{{ m.tags }} alert-dismissible fade show" role="alert">
+              {{ m }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
-
-            <div class="mb-3">
-              <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                <input type="password" name="password" class="form-control" placeholder="Password" required />
-              </div>
+          {% endfor %}
+        {% endif %}
+        <form method="post" action="{% url 'login' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input type="text" name="username" class="form-control" placeholder="Username" required />
             </div>
-
-            <div class="mb-3 text-end">
-              <!-- Opsional: arahkan ke halaman reset password Django kalau ada -->
-              <a href="#" class="text-decoration-none" style="color:#4A90E2;">Lupa Password?</a>
+          </div>
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input type="password" name="password" class="form-control" placeholder="Password" required />
             </div>
-
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Masuk</button>
-            </div>
-          </form>
-
-          <hr class="my-4" />
-          <p class="text-center text-muted mb-0">
-            Belum punya akun?
-            <a href="{% url 'register' %}" class="text-decoration-none" style="color:#4A90E2;"><i class="fas fa-user-plus me-1"></i>Daftar</a>
-          </p>
-        </div>
+          </div>
+          <div class="text-end mb-3">
+            <a href="#" class="text-decoration-none" style="color:var(--deep-blue);">Lupa Password?</a>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt me-2"></i>Masuk</button>
+          </div>
+        </form>
+        <hr class="my-4" />
+        <p class="text-center text-dark mb-0">
+          Belum punya akun?
+          <a href="{% url 'register' %}" class="text-decoration-none" style="color:var(--main-blue);"><i class="fas fa-user-plus me-1"></i>Daftar</a>
+        </p>
       </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
