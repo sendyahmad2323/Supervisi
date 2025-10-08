@@ -16,6 +16,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Avg
+from django.forms import inlineformset_factory
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -239,15 +240,12 @@ def edit_akun(request, user_id):
 
 @user_passes_test(admin_required)
 def kelola_format(request):
-    formats = FormatSupervisi.objects.all()
-    return render(request, 'admin/kelola_format.html', {'formats': formats})
-
-
-@login_required
-@user_passes_test(admin_required)
-def detail_format(request, pk):
-    format_obj = get_object_or_404(FormatSupervisi, pk=pk)
-    return render(request, 'admin/detail_format.html', {'format': format_obj})
+    formats = FormatSupervisi.objects.all().prefetch_related('items__aspek')
+    context = {
+        'formats': formats,
+        'current': 'kelola_format',
+    }
+    return render(request, 'admin/kelola_format.html', context)
 
 
 @login_required
@@ -418,7 +416,85 @@ def tambah_item_format(request, format_id):
             prosedur_index += 1
         return redirect('kelola_format')
 
-    return render(request, 'admin/item_form.html', {'format': format_supervisi})
+    return render(request, 'admin/item_form.html', {
+        'format': format_supervisi,
+        'current': 'kelola_format',
+    })
+
+
+@login_required
+@user_passes_test(admin_required)
+def edit_item_format(request, item_id):
+    item = get_object_or_404(ItemFormat.objects.select_related('format_supervisi'), pk=item_id)
+
+    if request.method == 'POST' and 'delete_item' in request.POST:
+        format_name = item.format_supervisi.nama
+        item.delete()
+        messages.success(request, f"Item pada format '{format_name}' berhasil dihapus.")
+        return redirect('kelola_format')
+
+    if request.method == 'POST' and 'delete_aspek_id' in request.POST:
+        aspek_id = request.POST.get('delete_aspek_id')
+        aspek = get_object_or_404(AspekFormat, pk=aspek_id, item_format=item)
+        aspek.delete()
+        messages.success(request, "Aspek penilaian berhasil dihapus.")
+        return redirect('edit_item_format', item_id=item.id)
+
+    AspekFormSet = inlineformset_factory(
+        ItemFormat,
+        AspekFormat,
+        fields=['nama_aspek', 'd', 'td'],
+        extra=1,
+        can_delete=True,
+        widgets={
+            'nama_aspek': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Masukkan aspek'
+            }),
+            'd': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'td': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    )
+
+    if request.method == 'POST':
+        form = ItemFormatForm(request.POST, instance=item)
+        formset = AspekFormSet(request.POST, instance=item, prefix='aspek')
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            messages.success(request, "Item format berhasil diperbarui.")
+            return redirect('kelola_format')
+    else:
+        form = ItemFormatForm(instance=item)
+        formset = AspekFormSet(instance=item, prefix='aspek')
+
+    context = {
+        'form': form,
+        'formset': formset,
+        'item': item,
+        'format_obj': item.format_supervisi,
+        'current': 'kelola_format',
+    }
+    return render(request, 'admin/edit_item.html', context)
+
+
+@login_required
+@user_passes_test(admin_required)
+def hapus_item_format(request, item_id):
+    item = get_object_or_404(ItemFormat.objects.select_related('format_supervisi'), pk=item_id)
+    format_name = item.format_supervisi.nama
+
+    if request.method == 'POST':
+        item.delete()
+        messages.success(request, f"Item pada format '{format_name}' berhasil dihapus.")
+        return redirect('kelola_format')
+
+    context = {
+        'item': item,
+        'format_obj': item.format_supervisi,
+        'current': 'kelola_format',
+    }
+    return render(request, 'admin/hapus_item.html', context)
 
 
 # ================== CETAK PDF (ReportLab, layout seperti HTML) ==================

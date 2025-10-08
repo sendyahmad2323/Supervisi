@@ -48,6 +48,19 @@
       font-size: 2rem;
       color: rgba(13, 110, 253, 0.4);
     }
+    .item-panel {
+      background: rgba(13, 110, 253, 0.04);
+      border-radius: 12px;
+      border: 1px solid rgba(13, 110, 253, 0.12);
+    }
+    .item-panel .table thead th {
+      background: rgba(13, 110, 253, 0.12);
+      color: #1e3a8a;
+    }
+    .badge-flag {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
   </style>
 
   <!-- Header -->
@@ -60,7 +73,7 @@
   </div>
 
   <!-- Tabel Format -->
-  <div class="card-soft">
+  <div class="card-soft" id="formatList">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0 text-center">
         <thead>
@@ -75,7 +88,7 @@
             <th>
               <i class="fa-solid fa-layer-group me-1"></i>Jumlah Aspek
             </th>
-            <th style="width:260px;">
+            <th style="width:320px;">
               <i class="fa-solid fa-gear me-1"></i>Aksi
             </th>
           </tr>
@@ -107,10 +120,97 @@
               <!-- Tombol aksi -->
               <td>
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
-                  <a href="{% url 'edit_format' f.pk %}" class="btn btn-warning btn-sm text-white btn-soft"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</a>
+                  <button class="btn btn-outline-primary btn-sm btn-soft" type="button" data-bs-toggle="collapse" data-bs-target="#items-{{ f.id }}" aria-expanded="false" aria-controls="items-{{ f.id }}"><i class="fa-solid fa-list me-1"></i>Kelola Item</button>
+                  <a href="{% url 'edit_format' f.pk %}" class="btn btn-warning btn-sm text-white btn-soft"><i class="fa-solid fa-pen-to-square me-1"></i>Edit Format</a>
                   <a href="{% url 'hapus_format' f.pk %}" class="btn btn-danger btn-sm btn-soft" onclick="return confirm('Yakin ingin menghapus format ini?');"><i class="fa-solid fa-trash me-1"></i>Hapus</a>
-                  <a href="{% url 'tambah_item_format' f.id %}" class="btn btn-success btn-sm btn-soft"><i class="fa-solid fa-plus me-1"></i>Item</a>
-                  <a href="{% url 'detail_format' f.pk %}" class="btn btn-info btn-sm text-white btn-soft"><i class="fa-solid fa-circle-info me-1"></i>Detail</a>
+                </div>
+              </td>
+            </tr>
+            <tr class="item-row">
+              <td colspan="5" class="border-0 p-0">
+                <div class="collapse" id="items-{{ f.id }}" data-bs-parent="#formatList">
+                  <div class="item-panel p-3 m-3">
+                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                      <div>
+                        <h6 class="fw-bold mb-1 text-primary" style="text-align: left;">Daftar Item Format</h6>
+                        <div class="text-muted small">Edit pertanyaan, bobot, serta aspek penilaian item.</div>
+                      </div>
+                      <a href="{% url 'tambah_item_format' f.id %}" class="btn btn-success btn-soft btn-sm"><i class="fa-solid fa-plus me-1"></i>Tambah Item</a>
+                    </div>
+                    {% if f.deskripsi %}
+                      <div class="alert alert-primary py-2 px-3 mb-3" style="text-align: left;">
+                        <strong>Deskripsi Format:</strong>
+                        <p class="mb-0">{{ f.deskripsi }}</p>
+                      </div>
+                    {% endif %}
+
+                    {% if f.items.all %}
+                      <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                          <thead>
+                            <tr class="text-center">
+                              <th style="width:60px;">#</th>
+                              <th class="text-start">
+                                <i class="fa-solid fa-list me-1"></i>Prosedur / Pertanyaan
+                              </th>
+                              <th style="width:120px;">
+                                <i class="fa-solid fa-weight-scale me-1"></i>Bobot
+                              </th>
+                              <th class="text-start">
+                                <i class="fa-solid fa-layer-group me-1"></i>Aspek Penilaian
+                              </th>
+                              <th style="width:140px;" class="text-center">
+                                <i class="fa-solid fa-pen-to-square me-1"></i>Aksi
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for item in f.items.all %}
+                              <tr>
+                                <td class="text-center fw-semibold text-primary">{{ forloop.counter }}</td>
+                                <td class="text-start">
+                                  <div class="fw-semibold">{{ item.pertanyaan }}</div>
+                                </td>
+                                <td class="text-center">
+                                  <span class="badge bg-primary-subtle text-primary fw-semibold">{{ item.bobot|floatformat:2 }}</span>
+                                </td>
+                                <td class="text-start">
+                                  {% if item.aspek.all %}
+                                    <ul class="list-unstyled mb-0 small">
+                                      {% for aspek in item.aspek.all %}
+                                        <li class="mb-1">
+                                          <span class="fw-semibold">{{ aspek.nama_aspek }}</span>
+                                          {% if aspek.d %}
+                                            <span class="badge bg-success-subtle text-success badge-flag ms-1">D</span>
+                                          {% endif %}
+                                          {% if aspek.td %}
+                                            <span class="badge bg-warning-subtle text-warning badge-flag ms-1">TD</span>
+                                          {% endif %}
+                                        </li>
+                                      {% endfor %}
+                                    </ul>
+                                  {% else %}
+                                    <span class="text-muted fst-italic">Belum ada aspek.</span>
+                                  {% endif %}
+                                </td>
+                                <td class="text-center">
+                                  <div class="d-flex justify-content-center gap-2">
+                                    <a href="{% url 'edit_item_format' item.id %}" class="btn btn-outline-primary btn-soft btn-sm"><i class="fa-solid fa-pen-to-square me-1"></i>Edit</a>
+                                    <a href="{% url 'hapus_item_format' item.id %}" class="btn btn-outline-danger btn-soft btn-sm" onclick="return confirm('Yakin ingin menghapus item ini beserta seluruh aspek?');"><i class="fa-solid fa-trash me-1"></i>Hapus</a>
+                                  </div>
+                                </td>
+                              </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    {% else %}
+                      <div class="text-center text-muted py-3">
+                        <i class="fa-regular fa-circle-info d-block mb-2"></i>
+                        Belum ada item pada format ini.
+                      </div>
+                    {% endif %}
+                  </div>
                 </div>
               </td>
             </tr>

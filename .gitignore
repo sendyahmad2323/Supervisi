@@ -1,1 +1,35 @@
-/venv
+# Byte-compiled / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Django files
+db.sqlite3
+*.sqlite3
+/media/
+/staticfiles/
+/static/
+
+# Environment variables / secrets
+.env
+.venv/
+/venv/
+env/
+
+# IDE / editor configs
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+Thumbs.db
+ehthumbs.db
+.DS_Store
+
+# Logs
+*.log
