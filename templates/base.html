@@ -187,8 +187,8 @@
             {% if user.is_staff %}
               <a class="side-link {% if current == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-gauge"></i> Dashboard</a>
               <a class="side-link {% if current == 'daftar_supervisi' %}active{% endif %}" href="{% url 'daftar_supervisi' %}"><i class="fa-solid fa-list-check"></i> Daftar Supervisi</a>
-              <a class="side-link {% if current == 'kelola_perawat' %}active{% endif %}" href="{% url 'kelola_perawat' %}"><i class="fa-solid fa-user-nurse"></i> Kelola Perawat</a>
               <a class="side-link {% if current == 'kelola_format' %}active{% endif %}" href="{% url 'kelola_format' %}"><i class="fa-solid fa-clipboard-list"></i> Kelola Format</a>
+              <a class="side-link {% if current == 'kelola_akun' %}active{% endif %}" href="{% url 'kelola_akun' %}"><i class="fa-solid fa-user-gear"></i> Kelola Akun</a>
             {% else %}
               <a class="side-link {% if current == 'daftar_format_supervisi' %}active{% endif %}" href="{% url 'daftar_format_supervisi' %}"><i class="fa-solid fa-clipboard-check"></i> Daftar Format Supervisi</a>
               <a class="side-link {% if current == 'ringkasan_saya' %}active{% endif %}" href="{% url 'ringkasan_saya' %}"><i class="fa-solid fa-clipboard-list"></i><span>Ringkasan Saya</span></a>

@@ -1,6 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import FormatSupervisi, ItemFormat, Supervisi, AspekFormat, JawabanAspek
-from .forms import JawabanForm, FormatSupervisiForm, ItemFormatForm, SupervisiForm, RegisterForm
+from .forms import (
+    JawabanForm,
+    FormatSupervisiForm,
+    ItemFormatForm,
+    SupervisiForm,
+    RegisterForm,
+    AkunForm,
+    AkunUpdateForm,
+)
 from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
@@ -137,31 +145,96 @@ def hapus_supervisi(request, pk):
 
 
 @user_passes_test(admin_required)
-def kelola_perawat(request):
-    perawat = User.objects.filter(is_staff=False)
-    return render(request, 'admin/kelola_perawat.html', {'perawat': perawat})
+def kelola_akun(request):
+    perawat_group, _ = Group.objects.get_or_create(name="Perawat")
+    kepala_group, _ = Group.objects.get_or_create(name="Kepala Ruangan")
+
+    perawat = User.objects.filter(groups=perawat_group).order_by('username')
+    kepala_ruangan = User.objects.filter(groups=kepala_group).order_by('username')
+
+    context = {
+        'perawat': perawat,
+        'kepala_ruangan': kepala_ruangan,
+        'current': 'kelola_akun',
+    }
+    return render(request, 'admin/kelola_perawat.html', context)
 
 
-class PerawatForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
+@user_passes_test(admin_required)
+def tambah_akun(request):
+    role = request.POST.get('role') or request.GET.get('role') or 'perawat'
+    if role not in ('perawat', 'kepala'):
+        role = 'perawat'
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password']
-
-
-def tambah_perawat(request):
     if request.method == 'POST':
-        form = PerawatForm(request.POST)
+        form = AkunForm(request.POST)
+
         if form.is_valid():
             user = form.save(commit=False)
+            user.is_staff = (role == 'kepala')
             user.set_password(form.cleaned_data['password'])
-            user.is_staff = False
             user.save()
-            return redirect('kelola_perawat')
+
+            group_name = "Kepala Ruangan" if role == 'kepala' else "Perawat"
+            group, _ = Group.objects.get_or_create(name=group_name)
+            user.groups.add(group)
+
+            role_label = "Kepala Ruangan" if role == 'kepala' else "Perawat"
+            messages.success(request, f"Akun {role_label} berhasil ditambahkan.")
+            return redirect('kelola_akun')
     else:
-        form = PerawatForm()
-    return render(request, 'admin/tambah_perawat.html', {'form': form})
+        form = AkunForm()
+    context = {
+        'form': form,
+        'current': 'kelola_akun',
+        'default_role': role,
+    }
+    return render(request, 'admin/tambah_perawat.html', context)
+
+
+@user_passes_test(admin_required)
+def edit_akun(request, user_id):
+    user_obj = get_object_or_404(User, pk=user_id)
+
+    perawat_group, _ = Group.objects.get_or_create(name="Perawat")
+    kepala_group, _ = Group.objects.get_or_create(name="Kepala Ruangan")
+
+    current_role = 'kepala' if user_obj.groups.filter(name="Kepala Ruangan").exists() else 'perawat'
+
+    if request.method == 'POST':
+        form = AkunUpdateForm(request.POST, instance=user_obj)
+        role = request.POST.get('role', current_role)
+        if role not in ('perawat', 'kepala'):
+            role = 'perawat'
+
+        if form.is_valid():
+            akun = form.save(commit=False)
+            akun.is_staff = (role == 'kepala')
+            new_password = form.cleaned_data.get('password')
+            if new_password:
+                akun.set_password(new_password)
+            akun.save()
+
+            akun.groups.clear()
+            if role == 'kepala':
+                akun.groups.add(kepala_group)
+            else:
+                akun.groups.add(perawat_group)
+
+            role_label = "Kepala Ruangan" if role == 'kepala' else "Perawat"
+            messages.success(request, f"Akun {role_label} berhasil diperbarui.")
+            return redirect('kelola_akun')
+    else:
+        form = AkunUpdateForm(instance=user_obj)
+        role = current_role
+
+    context = {
+        'form': form,
+        'user_obj': user_obj,
+        'current_role': role,
+        'current': 'kelola_akun',
+    }
+    return render(request, 'admin/edit_akun.html', context)
 
 
 @user_passes_test(admin_required)

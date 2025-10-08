@@ -56,12 +56,28 @@ class FormatSupervisiForm(forms.ModelForm):
         model = FormatSupervisi
         fields = ['nama']
 
-class PerawatForm(forms.ModelForm):
+class AkunForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email']
+        labels = {
+            'username': 'Nama Pengguna',
+            'email': 'Email',
+        }
+
+
+class AkunUpdateForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        label="Password Baru",
+        required=False
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
         labels = {
             'username': 'Nama Pengguna',
             'email': 'Email',
