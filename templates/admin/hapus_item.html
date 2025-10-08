@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Hapus Item Format
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-triangle-exclamation me-2"></i>Hapus Item Format
+{% endblock %}
+
+{% block content %}
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <h5 class="card-title text-danger fw-bold">
+        <i class="fa-solid fa-circle-exclamation me-2"></i>Konfirmasi Penghapusan
+      </h5>
+      <p class="mb-3">
+        Item berikut akan dihapus dari format <strong>{{ format_obj.nama }}</strong>:
+      </p>
+      <ul class="list-group mb-3">
+        <li class="list-group-item">
+          <div class="fw-semibold">{{ item.pertanyaan }}</div>
+          <div class="small text-muted">Bobot: {{ item.bobot|floatformat:2 }}</div>
+        </li>
+      </ul>
+      <div class="alert alert-warning">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        Tindakan ini akan menghapus seluruh aspek penilaian yang terkait dengan item.
+      </div>
+      <form method="post" class="d-flex gap-2 justify-content-end mt-3">
+        {% csrf_token %}
+        <a href="{% url 'kelola_format' %}" class="btn btn-secondary">
+          <i class="fa-solid fa-arrow-left me-1"></i>Batal
+        </a>
+        <button type="submit" class="btn btn-danger">
+          <i class="fa-solid fa-trash me-1"></i>Hapus Item
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

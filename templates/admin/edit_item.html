@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}
+  Edit Item Format
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-pen-to-square me-2"></i>Edit Item Format
+{% endblock %}
+
+{% block content %}
+  <style>
+    .card-soft {
+      background: #fff;
+      border: 1px solid rgba(13, 110, 253, 0.08);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(13, 110, 253, 0.06);
+    }
+    .hero {
+      background: linear-gradient(145deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.08));
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 28px rgba(13, 110, 253, 0.08);
+      padding: 18px;
+    }
+    .btn-soft {
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.15);
+      transition: all 0.2s ease;
+    }
+    .btn-soft:hover {
+      transform: translateY(-2px);
+    }
+    .form-label {
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .form-control {
+      border-radius: 12px;
+    }
+    .aspek-card {
+      border: 1px solid rgba(13, 110, 253, 0.12);
+      border-radius: 12px;
+      padding: 16px;
+      background: rgba(13, 110, 253, 0.03);
+    }
+    .aspek-card + .aspek-card {
+      margin-top: 12px;
+    }
+    .form-check-input {
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      accent-color: #0d6efd;
+    }
+    .delete-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #dc3545;
+    }
+  </style>
+
+  <!-- Header -->
+  <div class="hero mb-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <h5 class="fw-bold mb-1">
+        <i class="fa-solid fa-list me-2 text-primary"></i>Edit Item untuk Format {{ format_obj.nama }}
+      </h5>
+      <div class="text-muted small">Perbarui isi item dan aspek penilaian sesuai kebutuhan supervisi.</div>
+    </div>
+    <a href="{% url 'kelola_format' %}" class="btn btn-secondary btn-soft">
+      <i class="fa-solid fa-arrow-left me-1"></i>Kembali
+    </a>
+  </div>
+
+  <!-- Form -->
+  <form method="post" class="card-soft p-4">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {% for error in form.non_field_errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-8">
+        <label class="form-label" for="{{ form.pertanyaan.id_for_label }}">Prosedur / Pertanyaan</label>
+        {{ form.pertanyaan }}
+        {% if form.pertanyaan.errors %}
+          <div class="invalid-feedback d-block">
+            {% for error in form.pertanyaan.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="{{ form.bobot.id_for_label }}">Bobot Penilaian</label>
+        {{ form.bobot }}
+        {% if form.bobot.errors %}
+          <div class="invalid-feedback d-block">
+            {% for error in form.bobot.errors %}
+              {{ error }}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <h6 class="fw-bold mb-3 text-primary">
+      <i class="fa-solid fa-layer-group me-1"></i>Aspek Penilaian
+    </h6>
+
+    {% if formset.non_form_errors %}
+      <div class="alert alert-danger">
+        {% for error in formset.non_form_errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {{ formset.management_form }}
+    <div id="aspek-container">
+      {% for aspek_form in formset %}
+        <div class="aspek-card" data-index="{{ forloop.counter0 }}">
+          {{ aspek_form.id }}
+          <div class="row g-3 align-items-center">
+            <div class="col-md-7">
+              <label class="form-label" for="{{ aspek_form.nama_aspek.id_for_label }}">Nama Aspek</label>
+              {{ aspek_form.nama_aspek }}
+              {% if aspek_form.nama_aspek.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in aspek_form.nama_aspek.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-2">
+              <div class="form-check">
+                {{ aspek_form.d }}
+                <label class="form-check-label fw-semibold ms-2" for="{{ aspek_form.d.id_for_label }}">D</label>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-check">
+                {{ aspek_form.td }}
+                <label class="form-check-label fw-semibold ms-2" for="{{ aspek_form.td.id_for_label }}">TD</label>
+              </div>
+            </div>
+            <div class="col-md-1 text-md-center">
+              {% if aspek_form.instance.pk %}
+                <button type="submit" name="delete_aspek_id" value="{{ aspek_form.instance.pk }}" class="btn btn-outline-danger btn-sm btn-soft" onclick="return confirm('Hapus aspek ini?');">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" class="btn btn-outline-primary btn-soft mt-3" id="add-aspek">
+      <i class="fa-solid fa-plus me-1"></i>Tambah Aspek
+    </button>
+
+    <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
+      <button type="submit" name="delete_item" value="1" class="btn btn-danger btn-soft" onclick="return confirm('Yakin ingin menghapus item ini beserta seluruh aspek?');">
+        <i class="fa-solid fa-trash me-1"></i>Hapus Item
+      </button>
+      <div class="d-flex gap-2">
+        <a href="{% url 'kelola_format' %}" class="btn btn-secondary btn-soft">
+          <i class="fa-solid fa-xmark me-1"></i>Batal
+        </a>
+        <button type="submit" class="btn btn-success btn-soft">
+          <i class="fa-solid fa-floppy-disk me-1"></i>Simpan Perubahan
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <template id="aspek-empty-template">
+    <div class="aspek-card" data-index="__prefix__">
+      {{ formset.empty_form.id }}
+      <div class="row g-3 align-items-center">
+        <div class="col-md-7">
+          <label class="form-label" for="{{ formset.empty_form.nama_aspek.id_for_label }}">Nama Aspek</label>
+          {{ formset.empty_form.nama_aspek }}
+        </div>
+        <div class="col-md-2">
+          <div class="form-check">
+            {{ formset.empty_form.d }}
+            <label class="form-check-label fw-semibold ms-2" for="{{ formset.empty_form.d.id_for_label }}">D</label>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-check">
+            {{ formset.empty_form.td }}
+            <label class="form-check-label fw-semibold ms-2" for="{{ formset.empty_form.td.id_for_label }}">TD</label>
+          </div>
+        </div>
+        <div class="col-md-1 text-md-center">
+          <span class="text-muted small fst-italic">Simpan dahulu untuk opsi hapus.</span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const container = document.getElementById('aspek-container')
+      const addBtn = document.getElementById('add-aspek')
+      const managementTotal = document.getElementById('id_aspek-TOTAL_FORMS')
+      const template = document.getElementById('aspek-empty-template')
+
+      function activateExclusiveCheckboxes (scope) {
+        const dBox = scope.querySelector("input[type='checkbox'][name$='-d']")
+        const tdBox = scope.querySelector("input[type='checkbox'][name$='-td']")
+        if (!dBox || !tdBox) return
+
+        const sync = () => {
+          if (dBox.checked) {
+            tdBox.checked = false
+            tdBox.disabled = true
+          } else {
+            tdBox.disabled = false
+          }
+          if (tdBox.checked) {
+            dBox.checked = false
+            dBox.disabled = true
+          } else if (!tdBox.disabled) {
+            dBox.disabled = false
+          }
+        }
+
+        dBox.addEventListener('change', sync)
+        tdBox.addEventListener('change', sync)
+        sync()
+      }
+
+      container.querySelectorAll('.aspek-card').forEach(activateExclusiveCheckboxes)
+
+      addBtn.addEventListener('click', function () {
+        const currentCount = parseInt(managementTotal.value, 10)
+        const html = template.innerHTML.replace(/__prefix__/g, currentCount)
+        const wrapper = document.createElement('div')
+        wrapper.innerHTML = html.trim()
+        const newNode = wrapper.firstElementChild
+        container.appendChild(newNode)
+        managementTotal.value = currentCount + 1
+        activateExclusiveCheckboxes(newNode)
+      })
+    })
+  </script>
+{% endblock %}

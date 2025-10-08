@@ -26,7 +26,8 @@ urlpatterns = [
     path('admin/akun/tambah/', views.tambah_akun, name='tambah_akun'),
     path('admin/akun/<int:user_id>/edit/', views.edit_akun, name='edit_akun'),
     path('admin/format/', views.kelola_format, name='kelola_format'),
-    path('format/<int:pk>/', views.detail_format, name='detail_format'),
+    path('admin/format/item/<int:item_id>/edit/', views.edit_item_format, name='edit_item_format'),
+    path('admin/format/item/<int:item_id>/hapus/', views.hapus_item_format, name='hapus_item_format'),
     path('format/<int:pk>/edit/', views.edit_format, name='edit_format'),
     path('format/<int:pk>/hapus/', views.hapus_format, name='hapus_format'),
 
