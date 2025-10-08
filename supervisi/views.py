@@ -239,6 +239,32 @@ def edit_akun(request, user_id):
 
 
 @user_passes_test(admin_required)
+def hapus_akun(request, user_id):
+    perawat_group, _ = Group.objects.get_or_create(name="Perawat")
+    kepala_group, _ = Group.objects.get_or_create(name="Kepala Ruangan")
+
+    user_queryset = User.objects.filter(groups__in=[perawat_group, kepala_group]).distinct()
+    user_obj = get_object_or_404(user_queryset, pk=user_id)
+
+    if user_obj == request.user:
+        messages.error(request, "Anda tidak dapat menghapus akun Anda sendiri.")
+        return redirect('kelola_akun')
+
+    if request.method == 'POST':
+        username = user_obj.username
+        role_label = "Kepala Ruangan" if user_obj.groups.filter(name="Kepala Ruangan").exists() else "Perawat"
+        user_obj.delete()
+        messages.success(request, f"Akun {role_label} '{username}' berhasil dihapus.")
+        return redirect('kelola_akun')
+
+    context = {
+        'user_obj': user_obj,
+        'current': 'kelola_akun',
+    }
+    return render(request, 'admin/hapus_akun.html', context)
+
+
+@user_passes_test(admin_required)
 def kelola_format(request):
     formats = FormatSupervisi.objects.all().prefetch_related('items__aspek')
     context = {
@@ -293,10 +319,14 @@ def isi_supervisi(request, format_id):
         tim = request.POST.get('tim')
         jenjang_pk = request.POST.get('jenjang_pk')
         ruang = request.POST.get('ruang', 'Imdad Hamid Lantai 2')
+        perawat_nama = request.POST.get('perawat_nama', '').strip()
+        if not perawat_nama:
+            perawat_nama = request.user.get_full_name().strip() if request.user.get_full_name() else request.user.username
 
         supervisi = Supervisi.objects.create(
             format_supervisi=format_supervisi,
             perawat=request.user,
+            perawat_nama=perawat_nama,
             tim=tim,
             jenjang_pk=jenjang_pk,
             ruang=ruang,
@@ -329,9 +359,12 @@ def isi_supervisi(request, format_id):
         messages.success(request, "Data supervisi berhasil disimpan.")
         return redirect('daftar_format_supervisi')
 
+    default_perawat_nama = request.user.get_full_name().strip() if request.user.get_full_name() else request.user.username
+
     return render(request, 'supervisi/isi_supervisi.html', {
         'format': format_supervisi,
-        'items': items
+        'items': items,
+        'default_perawat_nama': default_perawat_nama,
     })
 
 
@@ -528,18 +561,45 @@ def cetak_supervisi_pdf(request, supervisi_id):
     iw = doc.width
 
     # Info
-    info_data = [
-        ["Perawat", f": {s.perawat.username}", "Tim", f": Tim {s.tim}"],
-        ["Ruang", f": {s.ruang}", "Jenjang PK", f": {s.jenjang_pk}"],
-        ["Skor Total", f": {s.skor_total:.1f}%", "", ""],
+    perawat_display = (
+        s.perawat_nama
+        or (s.perawat.get_full_name() if s.perawat and s.perawat.get_full_name() else None)
+        or (s.perawat.username if s.perawat else "")
+    )
+
+    col_info_label = 0.22 * iw
+    col_info_value = 0.28 * iw
+    info_rows = [
+        [
+            Paragraph("<b>Perawat</b>", st_small),
+            Paragraph(perawat_display, st_small),
+            Paragraph("<b>Skor Total</b>", st_small),
+            Paragraph(f"{s.skor_total:.1f}%", st_small),
+        ],
+        [
+            Paragraph("<b>Ruang</b>", st_small),
+            Paragraph(s.ruang, st_small),
+            Paragraph("<b>Tim</b>", st_small),
+            Paragraph(f"Tim {s.tim}", st_small),
+        ],
+        [
+            Paragraph("<b>Jenjang PK</b>", st_small),
+            Paragraph(s.jenjang_pk, st_small),
+            "", ""
+        ],
     ]
-    info_tbl = Table(info_data, colWidths=[0.20*iw, 0.30*iw, 0.20*iw, 0.30*iw])
+    info_tbl = Table(
+        info_rows,
+        colWidths=[col_info_label, col_info_value, col_info_label, col_info_value]
+    )
     info_tbl.setStyle(TableStyle([
         ('FONT', (0,0), (-1,-1), 'Times-Roman', 12),
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
         ('TOPPADDING', (0,0), (-1,-1), 2),
         ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('LEFTPADDING', (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
     ]))
     elements.append(info_tbl)
     elements.append(Spacer(1, 8))
@@ -593,11 +653,13 @@ def cetak_supervisi_pdf(request, supervisi_id):
     elements.append(Spacer(1, 36))
 
     # Label tanda tangan
+    col_signature = iw / 2
     lbl = Table([["PERAWAT YANG DI SUPERVISI", "SUPERVISOR"]],
-                colWidths=[iw/2, iw/2])
+                colWidths=[col_signature, col_signature])
     lbl.setStyle(TableStyle([
         ('FONT', (0,0), (-1,-1), 'Times-Bold', 12),
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 28),
     ]))
     elements.append(lbl)
@@ -605,9 +667,10 @@ def cetak_supervisi_pdf(request, supervisi_id):
     # Gambar TTD
     left_img = Image(s.ttd_perawat.path, width=4*cm, height=2.3*cm) if s.ttd_perawat else Spacer(1, 2.3*cm)
     right_img = Image(s.ttd_kepala.path, width=4*cm, height=2.3*cm) if s.ttd_kepala else Spacer(1, 2.3*cm)
-    ttd = Table([[left_img, right_img]], colWidths=[iw/2, iw/2])
+    ttd = Table([[left_img, right_img]], colWidths=[col_signature, col_signature])
     ttd.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
     elements.append(ttd)
@@ -618,13 +681,26 @@ def cetak_supervisi_pdf(request, supervisi_id):
                  else (s.kepala_ruangan.username if s.kepala_ruangan else "")))
     sup_nip = s.kepala_nip or ""
 
-    names = Table([
-        [Paragraph(f"<u>{s.perawat.username}</u>", st_small),
-         Paragraph(f"<u>{sup_name}</u>{('<br/>NIP : ' + sup_nip) if sup_nip else ''}", st_small)]
-    ], colWidths=[iw/2, iw/2])
+    nurse_name = perawat_display or ""
+
+    name_cells = [
+        [
+            Paragraph(
+                f"<para align='center'><u>{nurse_name}</u></para>",
+                st_small
+            ),
+            Paragraph(
+                f"<para align='center'><u>{sup_name}</u>{('<br/>NIP : ' + sup_nip) if sup_nip else ''}</para>",
+                st_small
+            )
+        ]
+    ]
+    names = Table(name_cells, colWidths=[col_signature, col_signature])
     names.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
     elements.append(names)
 

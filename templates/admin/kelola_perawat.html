@@ -121,8 +121,8 @@
                 <th>
                   <i class="fa-solid fa-envelope me-1"></i>Email
                 </th>
-                <th style="width:140px;">
-                  <i class="fa-solid fa-pen-to-square me-1"></i>Aksi
+                <th style="width:200px;">
+                  <i class="fa-solid fa-gear me-1"></i>Aksi
                 </th>
               </tr>
             </thead>
@@ -144,9 +144,14 @@
                     </td>
                     <td class="text-start">{{ p.email|default:"-" }}</td>
                     <td>
-                      <a href="{% url 'edit_akun' p.id %}" class="btn btn-outline-primary btn-action">
-                        <i class="fa-solid fa-pen-to-square"></i>Edit
-                      </a>
+                      <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'edit_akun' p.id %}" class="btn btn-outline-primary btn-action">
+                          <i class="fa-solid fa-pen-to-square"></i>Edit
+                        </a>
+                        <a href="{% url 'hapus_akun' p.id %}" class="btn btn-outline-danger btn-action" onclick="return confirm('Yakin ingin menghapus akun ini?');">
+                          <i class="fa-solid fa-trash"></i>Hapus
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 {% endfor %}
@@ -176,8 +181,8 @@
                 <th>
                   <i class="fa-solid fa-envelope me-1"></i>Email
                 </th>
-                <th style="width:140px;">
-                  <i class="fa-solid fa-pen-to-square me-1"></i>Aksi
+            <th style="width:220px;">
+              <i class="fa-solid fa-gear me-1"></i>Aksi
                 </th>
               </tr>
             </thead>
@@ -199,9 +204,14 @@
                     </td>
                     <td class="text-start">{{ k.email|default:"-" }}</td>
                     <td>
-                      <a href="{% url 'edit_akun' k.id %}" class="btn btn-outline-primary btn-action">
-                        <i class="fa-solid fa-pen-to-square"></i>Edit
-                      </a>
+                      <div class="d-flex justify-content-center gap-2">
+                        <a href="{% url 'edit_akun' k.id %}" class="btn btn-outline-primary btn-action">
+                          <i class="fa-solid fa-pen-to-square"></i>Edit
+                        </a>
+                        <a href="{% url 'hapus_akun' k.id %}" class="btn btn-outline-danger btn-action" onclick="return confirm('Yakin ingin menghapus akun ini?');">
+                          <i class="fa-solid fa-trash"></i>Hapus
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 {% endfor %}

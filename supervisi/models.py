@@ -35,6 +35,7 @@ class Supervisi(models.Model):
     format_supervisi = models.ForeignKey(FormatSupervisi, on_delete=models.CASCADE)
     perawat = models.ForeignKey(User, on_delete=models.CASCADE, related_name='supervisi_perawat')
     kepala_ruangan = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='supervisi_kepala')
+    perawat_nama = models.CharField("Nama Perawat (custom)", max_length=255, blank=True, null=True)
     kepala_nama = models.CharField("Nama Kepala Ruangan (custom)", max_length=255, blank=True, null=True)
     kepala_nip  = models.CharField("NIP Kepala Ruangan (custom)", max_length=100, blank=True, null=True)
     tanggal = models.DateField(auto_now_add=True)

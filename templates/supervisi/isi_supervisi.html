@@ -194,6 +194,25 @@
       </div>
     </div>
 
+    <!-- Nama Perawat -->
+    <div class="section-card mb-3">
+      <label class="form-label" for="perawatNamaInput">
+        Nama Perawat (untuk dokumen)
+      </label>
+      <input
+        type="text"
+        name="perawat_nama"
+        id="perawatNamaInput"
+        class="form-control"
+        placeholder="Masukkan nama lengkap perawat"
+        value="{{ default_perawat_nama }}"
+        required
+      />
+      <div class="form-text text-muted mt-1">
+        Nama ini akan muncul pada dokumen PDF hasil supervisi.
+      </div>
+    </div>
+
     <!-- TTD Perawat -->
     <div class="section-card">
       <label class="form-label d-block mb-2">Tanda Tangan Perawat</label>

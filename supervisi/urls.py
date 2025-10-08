@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/akun/', views.kelola_akun, name='kelola_akun'),
     path('admin/akun/tambah/', views.tambah_akun, name='tambah_akun'),
     path('admin/akun/<int:user_id>/edit/', views.edit_akun, name='edit_akun'),
+    path('admin/akun/<int:user_id>/hapus/', views.hapus_akun, name='hapus_akun'),
     path('admin/format/', views.kelola_format, name='kelola_format'),
     path('admin/format/item/<int:item_id>/edit/', views.edit_item_format, name='edit_item_format'),
     path('admin/format/item/<int:item_id>/hapus/', views.hapus_item_format, name='hapus_item_format'),

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Hapus Akun Pengguna
+{% endblock %}
+{% block pagetitle %}
+  <i class="fa-solid fa-user-xmark me-2"></i>Hapus Akun Pengguna
+{% endblock %}
+
+{% block content %}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <h5 class="fw-bold text-danger mb-3">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>Konfirmasi Penghapusan
+      </h5>
+      <p class="mb-3">
+        Anda akan menghapus akun <strong>{{ user_obj.username }}</strong>.
+      </p>
+      <ul class="list-group mb-3">
+        <li class="list-group-item">
+          <div class="fw-semibold">{{ user_obj.get_full_name|default:user_obj.username }}</div>
+          <div class="small text-muted">Email: {{ user_obj.email|default:"-" }}</div>
+        </li>
+      </ul>
+      <div class="alert alert-warning">
+        <i class="fa-solid fa-circle-info me-2"></i>
+        Tindakan ini tidak dapat dibatalkan.
+      </div>
+      <form method="post" class="d-flex justify-content-end gap-2 mt-3">
+        {% csrf_token %}
+        <a href="{% url 'kelola_akun' %}" class="btn btn-secondary">
+          <i class="fa-solid fa-arrow-left me-1"></i>Batal
+        </a>
+        <button type="submit" class="btn btn-danger">
+          <i class="fa-solid fa-trash me-1"></i>Hapus Akun
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
